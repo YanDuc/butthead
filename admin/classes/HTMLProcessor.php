@@ -169,7 +169,6 @@ class HTMLProcessor
     private function buildNavigation($pages, $root = '')
     {
         $parentDirectory = realpath($_SERVER['SCRIPT_NAME']);
-        $parentDirectory = $parentDirectory . '/butthead/build';
         $nav = '';
         $isSub = $root !== '' ? true : false;
         if (!$isSub) {
