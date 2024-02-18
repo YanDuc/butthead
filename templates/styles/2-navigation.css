@@ -1,0 +1,56 @@
+/* Style for first-level navigation */
+.bh-nav-first-level {
+    list-style-type: none;
+    padding: 0;
+}
+
+.bh-nav-first-level li {
+    display: inline-block;
+    position: relative;
+    margin-right: 10px;
+}
+
+.bh-nav-second-level li {
+    display: block;
+    position: relative;
+    margin-right: 10px;
+    width: fit-content;
+    transition: color 0.3s ease, font-weight 0.3s ease;
+    width: 100%;
+}
+.bh-nav-first-level>li a {
+    display: block;
+    width: 100%;
+}
+
+.bh-nav-first-level>li a:hover {
+    color: #007bff; /* Change color on hover */
+    font-weight: bold; /* Make the text bold on hover */
+}
+
+.bh-nav-first-level li a {
+    color: #000;
+    text-decoration: none;
+}
+
+/* Style for second-level navigation (accordion) */
+.bh-nav-second-level {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    right: -10px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    transition: max-height 0.3s ease-out; /* Add transition effect */
+    max-height: 0;
+    overflow: hidden;
+    width: max-content;
+}
+
+.bh-nav-first-level li:hover .bh-nav-second-level {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    max-height: 200px; /* Set the max height based on your content */
+}

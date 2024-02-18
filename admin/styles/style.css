@@ -1,0 +1,277 @@
+/* Reset default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f2f2f2;
+}
+
+/* Header styles */
+#main-header {
+  background-color: #fff;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+}
+.tac {
+  text-align: center;
+}
+
+nav ul,
+aside ul,
+main ul {
+  list-style: none;
+}
+
+aside ul {
+  margin-top: 15px;
+}
+
+.manage-menu {
+  display: flex;
+  align-items: center;
+}
+
+header ul li,
+aside ul li {
+  display: inline-block;
+  margin-right: 20px;
+}
+
+header ul li,
+header ul li a,
+aside ul li a {
+  cursor: pointer;
+  text-decoration: none;
+  color: #333;
+}
+
+header ul li:hover,
+header ul li a:hover,
+aside ul li a:hover {
+  color: #007bff;
+}
+
+/* Sidebar styles */
+aside {
+  background-color: #f5f5f5;
+  width: 250px;
+  padding: 20px;
+}
+
+aside ul li {
+  margin-bottom: 10px;
+  display: block; 
+}
+
+/* Main content styles */
+main {
+  padding: 20px;
+  width: calc(100% - 250px);
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+  aside {
+    display: none;
+  }
+
+  main {
+    width: 100%;
+  }
+}
+
+.main-container {
+  display: flex;
+}
+
+aside h2 {
+  color: #333;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+input[type="submit"],
+.button-link {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  display: block;
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+input[type="submit"] {
+  background-color: #4CAF50;
+}
+
+.button-link:hover {
+  background-color: #0056b3;
+}
+
+input[type="submit"]:hover {
+  background-color: #45a049;
+}
+
+
+.container-404 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  text-align: center;
+}
+
+
+
+
+
+/* MAIN */
+.container {
+  display: flex;
+}
+
+.left-navigation {
+  position: sticky;
+  top: 0;
+  width: 200px;
+}
+
+.left-navigation ul {
+  list-style: none;
+  padding: 0;
+}
+
+.left-navigation ul li {
+  padding: 5px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.left-navigation ul li:hover {
+  background-color: #ddd;
+}
+
+/* list of content */
+.right-content {
+  padding: 20px;
+  flex: 1;
+  width: 70vw;
+  height: 80vh;
+  overflow-y: scroll;
+}
+
+.right-content section {
+  margin: 10px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  /* max-height: 150px; */
+  overflow: hidden;
+}
+.bloc-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.right-content section .content > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.right-content section div .content > div.text {
+  max-height: 38px;
+}
+
+.right-content section img {
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  margin-top: 10px;
+}
+
+.gray-button,
+.modal-button,
+.permissions-button,
+.update-button,
+.keep-out-button,
+.delete-button {
+  background-color: #ccc;
+  padding: 5px 10px;
+  border: none;
+  margin: 0 5px;
+  cursor: pointer;
+}
+.add-button {
+  display: none;
+  float: right;
+}
+
+.list-item:hover .add-button {
+  display: inline-block;
+}
+
+#page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px dashed gray;
+  margin-bottom: 10px;
+}
+#page-header ul {
+  display: flex;
+}
+#page-header ul li {
+  margin: 0 10px;
+}
+
+#modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-footer {
+  margin-top: 20px;
+  text-align: right;
+}
+
+#modal-close {
+  margin-right: 10px;
+}
+
+.actions-container {
+  display: flex;
+  justify-content: end;
+}
+.actions-container button, .actions-container input[type="submit"] {
+  margin-left: 10px;
+}
+.icon {
+  filter: opacity(70%);
+}
+.icon:hover {
+  filter: opacity(100%);
+}

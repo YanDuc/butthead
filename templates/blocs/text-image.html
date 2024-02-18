@@ -1,0 +1,21 @@
+<div class="flex">
+    <div class="text">
+        {{ textarea | 50 | 500 }}
+    </div>
+    <div class="image">
+        {{ img | 500 | 500 }}
+    </div>
+</div>
+
+<style>
+    .flex {
+        display: flex;
+    }
+    .text {
+        width: 50%;
+        padding: 20px;
+    }
+    .image {
+        width: 50%;
+    }
+</style>

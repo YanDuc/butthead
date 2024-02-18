@@ -1,0 +1,191 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2024-02-10 15:08+0100\n"
+"PO-Revision-Date: 2024-02-10 15:09+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4.1\n"
+"X-Poedit-Basepath: ../../..\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: classes/UserManager.php:128 classes/UserManager.php:222
+msgid "Cannot remove last admin"
+msgstr "Impossible de supprimer le dernier administrateur"
+
+#: classes/UserManager.php:219
+msgid "User not found"
+msgstr "Utilisateur non trouvé"
+
+#: includes/header.php:5
+msgid "Edit parameters"
+msgstr "Édition"
+
+#: includes/header.php:15
+msgid "French"
+msgstr "Français"
+
+#: includes/header.php:19
+msgid "English"
+msgstr "Anglais"
+
+#: includes/header.php:24
+msgid "Change Password"
+msgstr "Changer le mot de passe"
+
+#: includes/header.php:27
+msgid "Disconnect"
+msgstr "Déconnexion"
+
+#: includes/sidebar.php:17
+msgid "Pages"
+msgstr "Pages"
+
+#: includes/sidebar.php:18
+msgid "Add page"
+msgstr "Ajouter une page"
+
+#: includes/sidebar.php:70
+msgid "Elements"
+msgstr "Éléments"
+
+#: includes/sidebar.php:72
+msgid "Header"
+msgstr "Entête"
+
+#: includes/sidebar.php:73
+msgid "Footer"
+msgstr "Bas de page"
+
+#: index.php:8
+msgid "Admin Panel"
+msgstr "Administration"
+
+#: modules/404.php:4
+msgid "Page not found"
+msgstr "Page non trouvée"
+
+#: modules/changePassword.php:2
+msgid "New Password"
+msgstr "Nouveau mot de passe"
+
+#: modules/changePassword.php:5
+msgid "Re type Password"
+msgstr "Confirmation mot de passe"
+
+#: modules/changePassword.php:8
+msgid "Submit"
+msgstr "Valider"
+
+#: modules/connexion.php:4
+msgid "Login Form"
+msgstr "Connexion"
+
+#: modules/connexion.php:11
+msgid "Password"
+msgstr "Mot de passe"
+
+#: modules/connexion.php:16
+msgid "Login"
+msgstr "Connexion"
+
+#: modules/editPage.php:12
+msgid "Content"
+msgstr "Contenu"
+
+#: modules/editPage.php:26
+msgid "Page Name"
+msgstr "Nom de la page"
+
+#: modules/editPage.php:29
+msgid "Description"
+msgstr "Description"
+
+#: modules/editPage.php:32
+msgid "Add to Navigation"
+msgstr "Ajouter à la navigation"
+
+#: modules/editPage.php:36
+msgid "Edit Page"
+msgstr "Modifier la page"
+
+#: modules/users/manageUsers.php:10 modules/works-butt-head.php:64
+msgid "Cancel"
+msgstr "Annuler"
+
+#: modules/users/manageUsers.php:11 modules/works-butt-head.php:65
+msgid "Confirm"
+msgstr "Confirmer"
+
+#: modules/users/manageUsers.php:14
+msgid "Add user"
+msgstr "Ajouter un utilisateur"
+
+#: modules/users/manageUsers.php:19
+msgid "Email"
+msgstr "Email"
+
+#: modules/users/manageUsers.php:20
+msgid "Role"
+msgstr "Role"
+
+#: modules/users/manageUsers.php:21
+msgid "Actions"
+msgstr "Actions"
+
+#: modules/users/manageUsers.php:34
+msgid "Admin"
+msgstr "Admin"
+
+#: modules/users/manageUsers.php:39
+msgid "Permission"
+msgstr "Permissions"
+
+#: modules/users/manageUsers.php:40 modules/works-butt-head.php:117
+msgid "Delete"
+msgstr "Supprimer"
+
+#: modules/users/manageUsers.php:50
+msgid "Permissions"
+msgstr "Permissions"
+
+#: modules/works-butt-head.php:54
+msgid "Delete page"
+msgstr "Supprimer une page"
+
+#: modules/works-butt-head.php:55
+msgid "Params"
+msgstr "Paramètres"
+
+#: modules/works-butt-head.php:56
+msgid "Preview"
+msgstr "Prévisualiser"
+
+#: modules/works-butt-head.php:71
+msgid "Blocs"
+msgstr "Blocs"
+
+#: modules/works-butt-head.php:77
+msgid "Layouts"
+msgstr "Disposition"
+
+#: modules/works-butt-head.php:115
+msgid "Get out of layout"
+msgstr "Sortir"
+
+#: modules/works-butt-head.php:118
+msgid "Update"
+msgstr "Modifier"
+
+#~ msgid "Parameters"
+#~ msgstr "Paramètres"
+
+#~ msgid "Are you sure you want to delete this bloc ?"
+#~ msgstr "Êtes-vous sûr(e) de vouloir supprimer ce bloc ?"
+
+#~ msgid "Are you sure you want to delete %s ?"
+#~ msgstr "Êtes-vous sûr(e) de vouloir supprimer %s ?"

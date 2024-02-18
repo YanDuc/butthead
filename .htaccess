@@ -1,0 +1,3 @@
+RewriteEngine On
+# RewriteRule ^(.+)$ /butthead/build/$1 [L]
+# RewriteRule ^admin$ - [L]

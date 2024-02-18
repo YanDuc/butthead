@@ -1,0 +1,71 @@
+  /* Global style for form elements */
+  form input[type="text"],
+  form input[type="number"],
+  form input[type="password"],
+  form input[type="email"],
+  form textarea,
+  form input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: box-shadow 0.3s ease;
+    margin-bottom: 10px;
+  }
+
+  /* Style for form elements on focus */
+  form input[type="password"]:focus,
+  form input[type="text"]:focus,
+  form input[type="email"]:focus,
+  form input[type="number"]:focus,
+  form textarea:focus,
+  form input[type="file"]:focus {
+    box-shadow: 0 0 5px #aaa;
+  }
+
+  /* Style for labels */
+  form label {
+    transition: color 0.3s ease;
+  }
+
+  /* Style for labels when form elements are focused */
+  form input[type="email"]:focus+label,
+  form input[type="password"]:focus+label,
+  form input[type="text"]:focus+label,
+  form input[type="number"]:focus+label,
+  form textarea:focus+label,
+  form input[type="file"]:focus+label {
+    color: #aaa;
+  }
+
+  #response {
+    color: green;
+  }
+
+  #error {
+    color: red;
+  }
+
+  select {
+    padding: 5px 10px;
+  }
+
+  /* Apply the red border to invalid elements when touched */
+  *:invalid:focus,
+  *[data-touched]:invalid {
+    border: 2px solid red !important;
+  }
+
+  /* Apply the green border to valid elements when touched */
+  *:valid:focus,
+  *[data-touched]:valid {
+    border: 2px solid green !important;
+  }
+
+  .dynamic-form {
+    padding: 10px;
+    border: 1px solid darkgray;
+    background-color: #fffefecc;
+    border-radius: 10px;
+  }
