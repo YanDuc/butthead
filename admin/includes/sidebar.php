@@ -94,9 +94,9 @@ if (file_exists($jsonFilePath)) {
 <script>
   function changePage(page, parent = null, unauthorized) {
     if (parent) {
-      location.assign('/butthead/admin/?page=' + page + '&parent=' + parent);
+      location.assign('/admin/?page=' + page + '&parent=' + parent);
     } else {
-      location.assign('/butthead/admin/?page=' + page);
+      location.assign('/admin/?page=' + page);
     }
   }
 

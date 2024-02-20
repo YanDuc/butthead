@@ -26,6 +26,8 @@ window.confirmDelete = confirmDelete;
 
 preview.addEventListener("click", async (event) => {
   event.preventDefault();
+
+  // get page Content
   const formData = new FormData();
   formData.append("page", page);
   try {
@@ -34,8 +36,17 @@ preview.addEventListener("click", async (event) => {
       "getPageContent",
       formData
     );
+
+    // get page Meta
+    const formMeta = new FormData();
+    formMeta.append("pagePath", page);
+    const pageMeta = await getResponse("PageManager", "getPageParams", formMeta);
+
+    // compile html
     const htmlForm = new FormData();
     htmlForm.append("html", html);
+    htmlForm.append("title", pageMeta.pageName);
+    htmlForm.append("description", pageMeta.description);
     const compiledHtml = await getResponse(
       "HTMLProcessor",
       "compile",
@@ -105,7 +116,7 @@ function constructAndReplaceForm(
 
       // replace preview_file by the new file
       const preview = document.getElementById("preview_" + id);
-      preview.src = URL.createObjectURL(this.files[0]); 
+      preview.src = URL.createObjectURL(this.files[0]);
     });
   });
 

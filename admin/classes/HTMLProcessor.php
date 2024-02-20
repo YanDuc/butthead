@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once __DIR__ . '/ContentManager.php';
 require_once __DIR__ . '/PageManager.php';
 require_once __DIR__ . '/Logger.php';
@@ -13,7 +14,7 @@ class HTMLProcessor
         'tags' => [],
     ];
 
-    public function compile($html)
+    public function compile($html, $title, $description)
     {
         try {
             // get styles
@@ -44,11 +45,55 @@ class HTMLProcessor
             $htmlString = implode('', $blocsArray);
 
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
-            $this->html = "<style>" . $style . '</style>' . $htmlString;
+            $head = $this->getHead($title, $description, $style);
+            $this->html = $this->formatAndMinimizeHtml($htmlString, $head);
             return $this->html;
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
+    }
+
+    private function getHead($title, $description, $styles)
+    {
+        $lang = $_SESSION['loggedIn']['lang'] = 'fr_FR' ? 'fr' : 'en';
+        return "<!DOCTYPE html>
+        <html lang=\"$lang\">
+        <head>
+            <meta charset=\"UTF-8\">
+            <title>$title</title>
+            <meta name=\"description\" content=\"$description\">
+            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+            <base href=\"/\">
+            <style>
+                $styles
+            </style>
+        </head>";
+    }
+
+    private function formatAndMinimizeHtml($html, $head)
+    {
+        // keep only head styles
+        $stylePattern = '/<style\b[^>]*>.*?<\/style>/s';
+        $firstStyleTag = true;
+        $html = preg_replace_callback($stylePattern, function ($match) use (&$firstStyleTag) {
+            if ($firstStyleTag) {
+                $firstStyleTag = false;
+                return $match[0];
+            } else {
+                return '';
+            }
+        }, $html);
+
+        // remove extra spaces
+        $html = preg_replace('/\s{2,}/', ' ', $html);
+
+        // remove sript type application/json
+        $html = preg_replace('/<script type="application\/json">(.*?)<\/script>/s', '', $html);
+        
+        // remove comments
+        $html = preg_replace('/<!--(.*?)-->/', '', $html);
+
+        return $head . "<body>" . $html . '</body></html>';
     }
 
     private function moveBlocksInsideLayouts($blocsArray)
