@@ -14,15 +14,25 @@ class HTMLProcessor
         'tags' => [],
     ];
 
-    public function compile($html, $title, $description)
+    public function compile($path)
     {
         try {
+            // get html page content
+            $contentManager = new ContentManager();
+            $html = $contentManager->getPageContent($path);
+
+            // get Meta data
+            $pageManager = new PageManager();
+            $page = $pageManager->getPageParams($path);
+            $title = $page['pageName'];
+            $description = $page['description'];
+
             // get styles
             $globalStyle = "<style>" . $this->getGlobalStyles() . "</style>";
             // get header
             $contentManager = new ContentManager();
             $header = $contentManager->getBlocContentFromFile('bh-header', 'bh-header');
-            $nav = $this->getNavigation();
+            $nav = $this->getNavigation($path);
             $header = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header);
             $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer');
 
@@ -198,11 +208,11 @@ class HTMLProcessor
         return false;
     }
 
-    private function getNavigation()
+    private function getNavigation($path)
     {
         $pageManager = new PageManager();
         $pages = $pageManager->getPages();
-        return $this->buildNavigation($pages);
+        return $this->buildNavigation($pages, '', $path);
     }
 
     private function getGlobalStyles()
@@ -211,9 +221,8 @@ class HTMLProcessor
         return $contentManager->getGlobalStyles();
     }
 
-    private function buildNavigation($pages, $root = '')
+    private function buildNavigation($pages, $root = '', $currentPage = '')
     {
-        $parentDirectory = realpath($_SERVER['SCRIPT_NAME']);
         $nav = '';
         $isSub = $root !== '' ? true : false;
         if (!$isSub) {
@@ -221,8 +230,9 @@ class HTMLProcessor
         }
         foreach ($pages as $key => $page) {
             if (isset($page['addToNav']) && $page['addToNav']) {
-                $path = $root ? $parentDirectory . '/' . $root . '/' . $key : $parentDirectory . '/' . $key;
-                $nav .= '<li><a href="' . $path . '">' . $page['pageName'] . '</a>';
+                $path = $root ? $root . '/' . $key : $key;
+                $active = $currentPage === $path ? ' class="active"' : '';
+                $nav .= '<li><a href="' . $path . '"' . $active . '>' . $page['pageName'] . '</a>';
                 if (isset($page['subPages'])) {
                     $nav .= '<ul class="bh-nav-second-level">';
                     $nav .= $this->buildNavigation($page['subPages'], $key);
@@ -249,7 +259,7 @@ class HTMLProcessor
         if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             // Handle JSON decoding error, e.g., log an error message or throw an exception
             $errorMessage = json_last_error_msg();
-            $this->log("JSON decoding error: $errorMessage");
+            Logger::log("JSON decoding error: $errorMessage");
         } else {
             // Filter the keys and keep only the ones starting with "input" or "file"
             $filteredKeys = array_filter(array_keys($data), function ($key) {
@@ -404,37 +414,5 @@ class HTMLProcessor
         }, $content);
 
         return $content;
-    }
-
-    private function log($message)
-    {
-        $formattedMessage = '';
-
-        if (is_array($message)) {
-            $formattedMessage .= "Array:\n";
-            foreach ($message as $key => $value) {
-                if (is_array($value)) {
-                    $formattedMessage .= "Sub-Array for $key:\n";
-                    foreach ($value as $k => $v) {
-                        $formattedMessage .= "  $k: $v\n";
-                    }
-                    continue;
-                } elseif (is_object($value)) {
-                    $formattedMessage .= "  $key: Object\n";
-                    continue;
-                } elseif (is_null($value)) {
-                    $formattedMessage .= "  $key: NULL\n";
-                    continue;
-                } else {
-                    $formattedMessage .= "  $key: $value\n";
-                    continue;
-                }
-            }
-        } else {
-            $formattedMessage = $message;
-        }
-
-        // Append the formatted message to a custom log file
-        file_put_contents(__DIR__ . '/../error.log', $formattedMessage . PHP_EOL, FILE_APPEND);
     }
 }

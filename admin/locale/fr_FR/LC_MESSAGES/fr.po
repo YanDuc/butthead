@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-02-10 15:08+0100\n"
-"PO-Revision-Date: 2024-02-10 15:09+0100\n"
+"POT-Creation-Date: 2024-02-20 15:10+0100\n"
+"PO-Revision-Date: 2024-02-20 15:14+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -21,23 +21,27 @@ msgstr "Impossible de supprimer le dernier administrateur"
 msgid "User not found"
 msgstr "Utilisateur non trouvé"
 
-#: includes/header.php:5
+#: includes/header.php:7
 msgid "Edit parameters"
 msgstr "Édition"
 
-#: includes/header.php:15
+#: includes/header.php:11
+msgid "Build"
+msgstr "Générer le site"
+
+#: includes/header.php:19
 msgid "French"
 msgstr "Français"
 
-#: includes/header.php:19
+#: includes/header.php:23
 msgid "English"
 msgstr "Anglais"
 
-#: includes/header.php:24
+#: includes/header.php:28
 msgid "Change Password"
 msgstr "Changer le mot de passe"
 
-#: includes/header.php:27
+#: includes/header.php:31
 msgid "Disconnect"
 msgstr "Déconnexion"
 
@@ -69,6 +73,14 @@ msgstr "Administration"
 msgid "Page not found"
 msgstr "Page non trouvée"
 
+#: modules/addPage.php:3 modules/editPage.php:26
+msgid "Page Name"
+msgstr "Nom de la page"
+
+#: modules/addPage.php:6 modules/editPage.php:29
+msgid "Description"
+msgstr "Description"
+
 #: modules/changePassword.php:2
 msgid "New Password"
 msgstr "Nouveau mot de passe"
@@ -96,14 +108,6 @@ msgstr "Connexion"
 #: modules/editPage.php:12
 msgid "Content"
 msgstr "Contenu"
-
-#: modules/editPage.php:26
-msgid "Page Name"
-msgstr "Nom de la page"
-
-#: modules/editPage.php:29
-msgid "Description"
-msgstr "Description"
 
 #: modules/editPage.php:32
 msgid "Add to Navigation"

@@ -24,10 +24,10 @@
         </div>
 
         <label for="pageName"><?= _("Page Name") ?>:</label>
-        <input type="text" id="pageName" name="pageName">
+        <input type="text" id="pageName" name="pageName" minlength="5" maxlength="80" required>
 
         <label for="description"><?= _("Description") ?>:</label>
-        <textarea id="description" name="description"></textarea>
+        <textarea id="description" name="description" minlength="5" maxlength="160" required></textarea>
 
         <label for="addToNav"><?= _("Add to Navigation") ?></label>
         <input type="checkbox" id="addToNav" name="addToNav" checked="true">

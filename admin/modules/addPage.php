@@ -1,10 +1,10 @@
 <form id="addPageForm">
     
-    <label for="pageName">Page Name:</label>
-    <input type="text" id="pageName" name="pageName">
+    <label for="pageName"><?= _('Page Name') ?>:</label>
+    <input type="text" id="pageName" name="pageName" minlength="5" maxlength="80" required>
     
-    <label for="description">Description:</label>
-    <textarea id="description" name="description"></textarea>
+    <label for="description"><?= _('Description') ?>:</label>
+    <textarea id="description" name="description" minlength="5" maxlength="80" required></textarea>
     
     <input type="hidden" name="parent" value="<?= $parent ?>">
 

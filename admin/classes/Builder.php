@@ -21,21 +21,19 @@ class Builder
     {
         if (!empty($this->flatPages)) {
             foreach ($this->flatPages as $page) {
-                $contentManager = new ContentManager();
-                $content = $contentManager->getPageContent($page['path']);
                 $htmlProcessor = new HTMLProcessor();
-                $html = $htmlProcessor->compile($content, $page['title'], $page['description']);
+                $html = $htmlProcessor->compile($page);
 
                 // create page folder if it doesn't exist
-                if (!is_dir(self::BUILD_PATH . $page['path'])) {
-                    mkdir(self::BUILD_PATH . $page['path'], 0777, true);
+                if (!is_dir(self::BUILD_PATH . $page)) {
+                    mkdir(self::BUILD_PATH . $page, 0777, true);
                     // create index.html file
-                    if (!file_exists(self::BUILD_PATH . $page['path'] . '/index.html')) {
-                        file_put_contents(self::BUILD_PATH . $page['path'] . '/index.html', $html);
+                    if (!file_exists(self::BUILD_PATH . $page . '/index.html')) {
+                        file_put_contents(self::BUILD_PATH . $page . '/index.html', $html);
                     }
                 } else {
                     // update index.html file
-                    file_put_contents(self::BUILD_PATH . $page['path'] . '/index.html', $html);
+                    file_put_contents(self::BUILD_PATH . $page . '/index.html', $html);
                 }
             }
         }
@@ -45,7 +43,7 @@ class Builder
     {
         $result = [];
         foreach ($pages as $key => $page) {
-            $result[] = ['path' => $prefix . $key, 'title' => $page['pageName'], 'description' => $page['description']];
+            $result[] = $prefix . $key;
             if (isset($page['subPages'])) {
                 $result = array_merge($result, $this->flattenPages($page['subPages'], $prefix . $key . '/'));
             }

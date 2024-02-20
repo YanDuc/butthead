@@ -31,22 +31,9 @@ preview.addEventListener("click", async (event) => {
   const formData = new FormData();
   formData.append("page", page);
   try {
-    const html = await getResponse(
-      "ContentManager",
-      "getPageContent",
-      formData
-    );
-
-    // get page Meta
-    const formMeta = new FormData();
-    formMeta.append("pagePath", page);
-    const pageMeta = await getResponse("PageManager", "getPageParams", formMeta);
-
     // compile html
     const htmlForm = new FormData();
-    htmlForm.append("html", html);
-    htmlForm.append("title", pageMeta.pageName);
-    htmlForm.append("description", pageMeta.description);
+    htmlForm.append("path", page);
     const compiledHtml = await getResponse(
       "HTMLProcessor",
       "compile",
