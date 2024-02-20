@@ -8,6 +8,7 @@
     display: inline-block;
     position: relative;
     margin-right: 10px;
+    text-align: center;
 }
 
 .bh-nav-second-level li {
@@ -21,6 +22,7 @@
 .bh-nav-first-level>li a {
     display: block;
     width: 100%;
+    padding: 5px;
 }
 
 .bh-nav-first-level>li a:hover {
@@ -53,4 +55,8 @@
     visibility: visible;
     opacity: 1;
     max-height: 200px; /* Set the max height based on your content */
+}
+.bh-active {
+    font-weight: bold;
+    border-bottom: 2px solid #999999;
 }

@@ -230,12 +230,12 @@ class HTMLProcessor
         }
         foreach ($pages as $key => $page) {
             if (isset($page['addToNav']) && $page['addToNav']) {
+
                 $path = $root ? $root . '/' . $key : $key;
-                $active = $currentPage === $path ? ' class="active"' : '';
-                $nav .= '<li><a href="' . $path . '"' . $active . '>' . $page['pageName'] . '</a>';
+                $nav .= '<li><a href="' . $path . '"' . $this->activeClass($path, $currentPage) . '>' . $page['pageName'] . '</a>';
                 if (isset($page['subPages'])) {
                     $nav .= '<ul class="bh-nav-second-level">';
-                    $nav .= $this->buildNavigation($page['subPages'], $key);
+                    $nav .= $this->buildNavigation($page['subPages'], $key, $currentPage);
                     $nav .= '</ul>';
                 }
                 $nav .= '</li>';
@@ -245,6 +245,19 @@ class HTMLProcessor
             $nav .= '</ul>';
         }
         return $nav;
+    }
+
+    private function activeClass($path, $currentPage)
+    {
+        if (rtrim($path, '/') === rtrim($currentPage, '/')) {
+            return ' class="bh-active"';
+        }
+        $currentPageSegments = explode('/', $currentPage);
+        $pathSegments = explode('/', $path);
+        if (count($currentPageSegments) === 2 && count($pathSegments) === 1 && $currentPageSegments[0] === $pathSegments[0]) {
+            return ' class="bh-active"';
+        }
+        return '';
     }
 
     private function _extractData($content)
