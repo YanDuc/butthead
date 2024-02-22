@@ -24,8 +24,9 @@ class Builder
                 $htmlProcessor = new HTMLProcessor();
                 $html = $htmlProcessor->compile($page);
 
-                // create page folder if it doesn't exist
-                if (!is_dir(self::BUILD_PATH . $page)) {
+                if ($page === 'root') {
+                    file_put_contents(self::BUILD_PATH . 'index.html', $html);
+                } else if (!is_dir(self::BUILD_PATH . $page)) {
                     mkdir(self::BUILD_PATH . $page, 0777, true);
                     // create index.html file
                     if (!file_exists(self::BUILD_PATH . $page . '/index.html')) {

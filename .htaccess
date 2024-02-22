@@ -10,3 +10,6 @@ RewriteCond %{REQUEST_FILENAME} !-d
 # RewriteRule for all URLs except those starting with /build/
 RewriteCond %{REQUEST_URI} !^/build/ [NC]
 RewriteRule ^(.+)$ /build/$1/index.html [L]
+
+# Add a rule for serving build/index.html when no subfolder is specified
+RewriteRule ^$ /build/index.html [L]

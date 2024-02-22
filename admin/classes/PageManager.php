@@ -1,7 +1,9 @@
 <?php
+require_once __DIR__ . '/Logger.php';
 class PageManager
 {
     private $jsonFilePath = __DIR__ . '/../../previews/config.json';
+    private $previewsFolder = __DIR__ . '/../../previews/';
 
     public function add($pageName, $description, $parent = null)
     {
@@ -19,7 +21,7 @@ class PageManager
             }
 
             // Create folder in previews
-            mkdir('../../previews/' . $dirPath, 0777);
+            mkdir($this->previewsFolder . $dirPath, 0777);
 
             // Create or update JSON file
             $jsonData = [];
@@ -48,7 +50,7 @@ class PageManager
             }
 
             // Increment the order for the new item
-            $newOrder = $maxOrder + 1;
+            $newOrder = $pageName === 'root' ? 0 : $maxOrder + 1;
             $pageData['order'] = $newOrder;
 
             if ($parent) {
@@ -64,7 +66,7 @@ class PageManager
                 // Add top-level page data
                 $jsonData[$pageUrl] = [
                     'description' => $description,
-                    'pageName' => $pageName,
+                    'pageName' => $pageName === 'root' ? 'Home' : $pageName,
                     'order' => $newOrder
                 ];
             }
@@ -72,6 +74,7 @@ class PageManager
             file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
             return ['success' => true, 'page' => $pageUrl, 'parent' => $parent];
         } catch (Exception $e) {
+            Logger::log('Failed to add page: ' . $e->getMessage());
             // throw an exception with the error message
             throw new Exception($e->getMessage());
         }
@@ -363,7 +366,7 @@ class PageManager
         if ($change) {
             // rename folder
             $newPath = $parent ? $parent . '/' . $url : $url;
-            rename(__DIR__ . '/../../previews/' . $pagePath, __DIR__ . '/../../previews/' . $newPath);
+            rename($this->previewsFolder . $pagePath, $this->previewsFolder . $newPath);
             file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
         }
     }
@@ -388,7 +391,7 @@ class PageManager
             }
         }
         // remove folder
-        $folderPath = __DIR__ . '/../../previews/' . $pagePath;
+        $folderPath = $this->previewsFolder . $pagePath;
         if (is_dir($folderPath)) {
             $this->removeDirectory($folderPath);
         }

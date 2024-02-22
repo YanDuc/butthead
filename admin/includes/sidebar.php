@@ -4,6 +4,18 @@ $jsonFilePath = '../previews/config.json';
 if (file_exists($jsonFilePath)) {
   $jsonData = json_decode(file_get_contents($jsonFilePath), true);
 
+  if (!isset($jsonData['root'])) {
+    include_once('classes/PageManager.php');
+    $pageManager = new PageManager();
+    $pageManager->add('root', '', null);
+    $jsonData['root'] = [
+      "description" => "",
+      "pageName" => "Home",
+      "order" => 0,
+      "addToNav" => false
+    ];
+  }
+
   // Sort the data based on the "order" value in ascending order
   uasort($jsonData, function ($a, $b) {
     return $a['order'] <=> $b['order'];
@@ -14,8 +26,12 @@ if (file_exists($jsonFilePath)) {
 ?>
 
 <aside>
-  <h2><?= _('Pages') ?></h2>
-  <a class="button-link" href="?page=addPage"><?= _('Add page') ?></a>
+  <h2>
+    <?= _('Pages') ?>
+  </h2>
+  <a class="button-link" href="?page=addPage">
+    <?= _('Add page') ?>
+  </a>
   <ul id="sortable">
     <?php foreach ($jsonData as $id => $data): ?>
       <?php $allowChange = $data['unauthorizedUsers'] && in_array($_SESSION['loggedIn']['email'], $data['unauthorizedUsers']) ? false : true ?>
@@ -67,10 +83,16 @@ if (file_exists($jsonFilePath)) {
     <?php endforeach; ?>
   </ul>
 
-  <h2><?= _('Elements') ?></h2>
+  <h2>
+    <?= _('Elements') ?>
+  </h2>
   <ul id="page-elements">
-    <li><a href="?page=header"><?= _('Header') ?></a></li>
-    <li><a href="?page=footer"><?= _('Footer') ?></a></li>
+    <li><a href="?page=header">
+        <?= _('Header') ?>
+      </a></li>
+    <li><a href="?page=footer">
+        <?= _('Footer') ?>
+      </a></li>
   </ul>
 </aside>
 

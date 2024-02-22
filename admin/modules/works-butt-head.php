@@ -4,7 +4,9 @@ $contentManager = new ContentManager();
 $contentFolder = $parent ? $parent . '/' . $page : $page;
 
 // return 404 if page doesn't exist
-if (!$page || !is_dir('../previews/' . $contentFolder)) {
+if (!$page && is_dir('../previews/root')) {
+    $contentFolder = 'root';
+} else if (!$page || !is_dir('../previews/' . $contentFolder)) {
     include_once('modules/404.php');
     exit;
 }
@@ -47,11 +49,12 @@ try {
         <?= $page; ?>
     </h1>
     <ul>
-        <?php if (!$parent): ?>
-            <li><a href="#" class="button-link" onclick="updateURL('?page=addPage&parent=<?= $page ?>'); return false;">Add
-                    page</a></li>
+        <?php if (!$parent && $page != 'root'): ?>
+            <li><a href="#" class="button-link" onclick="updateURL('?page=addPage&parent=<?= $page ?>'); return false;"><?= _('Add page') ?></a></li>
         <?php endif; ?>
-        <li><a href="#" class="button-link" onclick="deletePage('<?= $contentFolder ?>')"><?= _('Delete page') ?></a></li>
+        <?php if ($page != 'root'): ?>
+            <li><a href="#" class="button-link" onclick="deletePage('<?= $contentFolder ?>')"><?= _('Delete page') ?></a></li>
+        <?php endif; ?>
         <li><a href="#" class="button-link" onclick="addURLParams('edit'); return false;"><?= _('Params') ?></a></li>
         <li><div  class="button-link" id="preview"><?= _('Preview') ?></div></li>
     </ul>
