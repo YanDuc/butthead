@@ -8,7 +8,7 @@ class ContentManager
 {
     private $page = null;
     const TEMPLATE_PATH = __DIR__ . '/../../templates/';
-    const IMAGES_PATH = __DIR__ . '/../../previews/assets/img/';
+    const IMAGES_PATH = __DIR__ . '/../../assets/img/';
     const PREVIEW_PATH = __DIR__ . '/../../previews/';
 
     public function addContent($page, $bloc, ...$rest)

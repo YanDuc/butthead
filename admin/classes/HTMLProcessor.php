@@ -13,6 +13,7 @@ class HTMLProcessor
         'ids' => [],
         'tags' => [],
     ];
+    const ASSETS_PATH = __DIR__ . '/../../assets/';
 
     public function compile($path)
     {
@@ -171,9 +172,9 @@ class HTMLProcessor
                     $content = substr_replace(
                         $content,
                         "<picture>
-                            " . ($this->isFileExists("{$fileName}_s.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['s'] . "px)\" srcset=\"../previews/assets/img/{$fileName}_s.jpeg\">" : "") . "
-                            " . ($this->isFileExists("{$fileName}_m.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['m'] . "px)\" srcset=\"../previews/assets/img/{$fileName}_m.jpeg\">" : "") . "
-                            <img src=\"../previews/assets/img/{$fileName}.jpeg\" alt=\"" . $alt . "\">
+                            " . ($this->isFileExists("{$fileName}_s.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['s'] . "px)\" srcset=\"../assets/img/{$fileName}_s.jpeg\">" : "") . "
+                            " . ($this->isFileExists("{$fileName}_m.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['m'] . "px)\" srcset=\"../assets/img/{$fileName}_m.jpeg\">" : "") . "
+                            <img src=\"assets/img/{$fileName}.jpeg\" alt=\"" . $alt . "\">
                         </picture>",
                         $pos,
                         strlen($value)
@@ -195,7 +196,7 @@ class HTMLProcessor
     // Function to check if a file exists
     private function isFileExists($filename)
     {
-        return file_exists(__DIR__ . "/../../previews/assets/img/{$filename}");
+        return file_exists(__DIR__ . "/../../assets/img/{$filename}");
     }
 
     private function containsDynamicInput($value)
@@ -217,8 +218,30 @@ class HTMLProcessor
 
     private function getGlobalStyles()
     {
+        $fontFaces = $this->generateFontFaceCSS();
         $contentManager = new ContentManager();
-        return $contentManager->getGlobalStyles();
+        $globalStyles = $contentManager->getGlobalStyles();
+        return $fontFaces . $globalStyles;
+    }
+
+    private function generateFontFaceCSS() {
+        // get fonts in assets
+        $directoryPath = self::ASSETS_PATH . 'fonts';
+        $fontFormats = ['woff', 'woff2', 'ttf'];
+        $fonts = '';
+        foreach (new DirectoryIterator($directoryPath) as $fileInfo) {
+          if ($fileInfo->isFile()) {
+            $extension = strtolower($fileInfo->getExtension());
+            if (in_array($extension, $fontFormats)) {
+              $fontFamily = basename($fileInfo->getBasename(), '.' . $extension);
+              $fonts .= "@font-face {
+                font-family: '" . $fontFamily . "';
+                src: url('assets/fonts/" . $fileInfo->getFilename() . "') format('" . ($extension === 'ttf' ? 'truetype' : $extension) . "');
+              }\n";
+            }
+          }
+        }
+        return $fonts;
     }
 
     private function buildNavigation($pages, $root = '', $currentPage = '')

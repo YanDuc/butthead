@@ -16,7 +16,7 @@ class Resize
    * Path to the image folder
    * @var string
    */
-  public $folderImg = __DIR__ . '/../../previews/assets/img';
+  public $folderImg = __DIR__ . '/../../assets/img';
 
   /**
    * Temporary file name

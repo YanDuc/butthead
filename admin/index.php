@@ -66,11 +66,7 @@
             include 'modules/footer.php';
             break;
           default:
-            if ($_GET['edit']) {
-              include 'modules/editPage.php';
-            } else {
-              include 'modules/works-butt-head.php';
-            }
+            include 'modules/works-butt-head.php';
             break;
         }
   }

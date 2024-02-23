@@ -106,7 +106,7 @@ class FormBuilder
         $input = "<input type='file' name='$name' id='$name'>";
         $altInput = "<input type='text' name='alt_$name' maxlength='100' placeholder='Alternative text' id='alt_$name' value='$value[1]'>";
         
-        $previewSrc = !empty($value) ? "../previews/assets/img/$value[0].jpeg" : '#';
+        $previewSrc = !empty($value) ? "../assets/img/$value[0].jpeg" : '#';
         $previewImage = "<img src='$previewSrc' height='100' id='preview_$name'>";
         
         $this->form[] = $label . "<div style='display: flex;'><div style='width: 85%; margin-right: 10px;'>" . $input . $altInput . "</div><div style='width: 15%; text-align: center;'>" . $previewImage . "</div></div>";
