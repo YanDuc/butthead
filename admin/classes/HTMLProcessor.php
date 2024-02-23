@@ -131,6 +131,7 @@ class HTMLProcessor
                     }
                 }
             }
+            $blocs = [];
         }
         // remove blocs
         foreach ($blocsToDelete as $index) {
@@ -364,8 +365,13 @@ class HTMLProcessor
         $className = $this->preventClassStartingByNumber($className);
         $matches = [];
         preg_match_all('/([^{}]+)\{/', $styles, $matches);
-
-        foreach ($matches[1] as $selector) {
+        $selectors = $matches[1];
+        
+        // filter media queries
+        $selectors = array_filter($selectors, function ($selector) {
+            return !str_contains($selector, '@media');
+        });
+        foreach ($selectors as $selector) {
             $selector = trim($selector);
             if (str_starts_with($selector, '.')) {
                 $this->htmlElementsWithCSS['classes'][] = ltrim($selector, '.');
@@ -379,8 +385,11 @@ class HTMLProcessor
         // Add class name to all style selectors
         $updatedStyles = preg_replace_callback('/([^{}]+)\{/', function ($matches) use ($className) {
             $selector = trim($matches[1]);
-            ;
-            return $selector . '.' . $className . ' {';
+            if (!str_contains($selector, '@media')) {
+                return $selector . '.' . $className . ' {';
+            } else {
+                return $selector . ' {';
+            }
         }, $styles);
 
         return $updatedStyles;

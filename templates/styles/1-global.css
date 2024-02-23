@@ -1,0 +1,11 @@
+* {
+    font-family: Poppins-Regular;
+}
+.full-width-band {
+    width: 100%;
+}
+.content-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
