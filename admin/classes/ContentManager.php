@@ -107,6 +107,14 @@ class ContentManager
                     $dynamicInputs = $this->extractDynamicInput($target['blocs'][$blockKey]['html']);
                     $values = $this->extractValues($target['blocs'][$blockKey]);
                     $formBuilder = new FormBuilder($dynamicInputs, $values);
+                } else {
+                    // find bloc inside layout
+                    list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($postValues['id'], $target['blocs']);
+                    if ($layout !== null && $bloc !== null) {
+                        $dynamicInputs = $this->extractDynamicInput($target['blocs'][$layout]['blocs'][$bloc]['html']);
+                        $values = $this->extractValues($target['blocs'][$layout]['blocs'][$bloc]);
+                        $formBuilder = new FormBuilder($dynamicInputs, $values);
+                    }
                 }
             }
             return $formBuilder->form;
@@ -159,9 +167,9 @@ class ContentManager
         // $filePath = self::PREVIEW_PATH . $page . '/index.html';
         $json = json_decode(file_get_contents($this->jsonFilePath), true);
         $target = &$this->getTargetPartOfJson($json, $page);
-        $blocKey = $this->getBlockIndexById($id, $target['blocs']);
         try {
             if (!$layout) {
+                $blocKey = $this->getBlockIndexById($id, $target['blocs']);
                 if ($blocKey !== null && $blocKey > 0) {
                     $temp = $target['blocs'][$blocKey];
                     $target['blocs'][$blocKey] = $target['blocs'][$blocKey - 1];
@@ -170,30 +178,15 @@ class ContentManager
                 // Write the updated content back to the file
                 file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
             } else {
-                // TODO : Move block inside layout
-                // $fileContent = $this->getPageContent($page);
-                // // Find the layout script tag
-                // $pattern = '/<script type="application\/json">\{"layout":"([^"]+)","id":"' . $layout . '".*\}<\/script>/';
-                // preg_match($pattern, $fileContent, $matches);
-
-                // if (count($matches) > 0) {
-
-                //     $layoutScriptTag = $matches[0];
-                //     $jsonContent = substr($layoutScriptTag, strlen('<script type="application/json">'), -strlen('</script>'));
-                //     $jsonObject = json_decode($jsonContent, true);
-
-                //     // move the block inside $jsonObject['blocs']
-                //     $blockIndex = array_search($id, $jsonObject['blocs']);
-                //     if ($blockIndex !== false && $blockIndex > 0) {
-                //         $temp = $jsonObject['blocs'][$blockIndex];
-                //         $jsonObject['blocs'][$blockIndex] = $jsonObject['blocs'][$blockIndex - 1];
-                //         $jsonObject['blocs'][$blockIndex - 1] = $temp;
-                //     }
-                //     $updatedJsonContent = json_encode($jsonObject);
-                //     $updatedLayoutScriptTag = '<script type="application/json">' . $updatedJsonContent . '</script>';
-                //     $updatedFileContent = str_replace($layoutScriptTag, $updatedLayoutScriptTag, $fileContent);
-                //     file_put_contents($filePath, $updatedFileContent);
-                // }
+                $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
+                $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
+                if ($blockIndex !== null && $blockIndex > 0) {
+                    $temp = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
+                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex - 1];
+                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex - 1] = $temp;
+                }
+                // Write the updated content back to the file
+                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
             }
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
@@ -204,10 +197,9 @@ class ContentManager
     {
         $json = json_decode(file_get_contents($this->jsonFilePath), true);
         $target = &$this->getTargetPartOfJson($json, $page);
-        $blocKey = $this->getBlockIndexById($id, $target['blocs']);
         try {
             if (!$layout) {
-                // move content down
+                $blocKey = $this->getBlockIndexById($id, $target['blocs']);
                 if ($blocKey !== null && $blocKey < count($target['blocs']) - 1) {
                     $temp = $target['blocs'][$blocKey];
                     $target['blocs'][$blocKey] = $target['blocs'][$blocKey + 1];
@@ -217,29 +209,15 @@ class ContentManager
                 // Write the updated content back to the file
                 file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
             } else {
-                // $fileContent = $this->getPageContent($page);
-                // // Find the layout script tag
-                // $pattern = '/<script type="application\/json">\{"layout":"([^"]+)","id":"' . $layout . '".*\}<\/script>/';
-                // preg_match($pattern, $fileContent, $matches);
-
-                // if (count($matches) > 0) {
-
-                //     $layoutScriptTag = $matches[0];
-                //     $jsonContent = substr($layoutScriptTag, strlen('<script type="application/json">'), -strlen('</script>'));
-                //     $jsonObject = json_decode($jsonContent, true);
-
-                //     // move the block inside $jsonObject['blocs']
-                //     $blockIndex = array_search($id, $jsonObject['blocs']);
-                //     if ($blockIndex !== false && $blockIndex < count($jsonObject['blocs']) - 1) {
-                //         $temp = $jsonObject['blocs'][$blockIndex];
-                //         $jsonObject['blocs'][$blockIndex] = $jsonObject['blocs'][$blockIndex + 1];
-                //         $jsonObject['blocs'][$blockIndex + 1] = $temp;
-                //     }
-                //     $updatedJsonContent = json_encode($jsonObject);
-                //     $updatedLayoutScriptTag = '<script type="application/json">' . $updatedJsonContent . '</script>';
-                //     $updatedFileContent = str_replace($layoutScriptTag, $updatedLayoutScriptTag, $fileContent);
-                //     file_put_contents($filePath, $updatedFileContent);
-                // }
+                $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
+                $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
+                if ($blockIndex !== null && $blockIndex < count($target['blocs'][$layoutIndex]['blocs']) - 1) {
+                    $temp = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
+                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex + 1];
+                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex + 1] = $temp;
+                }
+                // Write the updated content back to the file
+                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
             }
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
@@ -368,67 +346,53 @@ class ContentManager
         return null; // Return null if content with the specified id is not found
     }
 
+    private function getBlockIndexInsideLayout($id, $contents)
+    {
+        foreach ($contents as $key => $content) {
+            if (isset($content['layout']) && count($content['blocs']) > 0) {
+                foreach ($content['blocs'] as $blocKey => $bloc) {
+                    if (isset($bloc['id']) && $bloc['id'] === $id) {
+                        return ['layout' => $key, 'bloc' => $blocKey];
+                    }
+                }
+            }
+        }
+        return ['layout' => null, 'bloc' => null];
+    }
+
     public function addBlockToLayout($page, $blockID, $layoutID)
     {
-        $filePath = self::PREVIEW_PATH . $page . '/index.html';
-        $fileContent = file_get_contents($filePath);
+        $json = json_decode(file_get_contents($this->jsonFilePath), true);
+        $target = &$this->getTargetPartOfJson($json, $page);
+        $blockIndex = $this->getBlockIndexById($blockID, $target['blocs']);
+        $layoutIndex = $this->getBlockIndexById($layoutID, $target['blocs']);
+        if ($blockIndex !== null && $layoutIndex !== null) {
+            $target['blocs'][$layoutIndex]['blocs'][] = $target['blocs'][$blockIndex];
+            unset($target['blocs'][$blockIndex]);
+            $target['blocs'] = array_values($target['blocs']);
 
-        // Find the layout script tag
-        $pattern = '/<script type="application\/json">\{"layout":"([^"]+)","id":"' . $layoutID . '".*\}<\/script>/';
-        preg_match($pattern, $fileContent, $matches);
-
-        if (count($matches) > 0) {
-            $layoutScriptTag = $matches[0];
-
-            // Update the JSON content
-            $jsonContent = substr($layoutScriptTag, strlen('<script type="application/json">'), -strlen('</script>'));
-            $jsonObject = json_decode($jsonContent, true);
-
-            // Add the block ID to the array if it doesn't already exist
-            if (!isset($jsonObject['blocs']) || !in_array($blockID, $jsonObject['blocs'])) {
-                $jsonObject['blocs'][] = $blockID;
-                $updatedJsonContent = json_encode($jsonObject);
-
-                // Replace the script tag with the updated JSON content
-                $updatedLayoutScriptTag = '<script type="application/json">' . $updatedJsonContent . '</script>';
-                $updatedFileContent = str_replace($layoutScriptTag, $updatedLayoutScriptTag, $fileContent);
-
-                // Write the updated content back to the file
-                file_put_contents($filePath, $updatedFileContent);
-            }
-
+            // Write the updated content back to the file
+            file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
         }
     }
 
     public function removeBlockFromLayout($page, $id, $layout)
     {
-
-        $filePath = self::PREVIEW_PATH . $page . '/index.html';
-        $fileContent = file_get_contents($filePath);
-        // Find the layout script tag
-        $pattern = '/<script type="application\/json">\{"layout":"([^"]+)","id":"' . $layout . '".*\}<\/script>/';
-        preg_match($pattern, $fileContent, $matches);
-
-        if (count($matches) > 0) {
-
-            $layoutScriptTag = $matches[0];
-            $jsonContent = substr($layoutScriptTag, strlen('<script type="application/json">'), -strlen('</script>'));
-            $jsonObject = json_decode($jsonContent, true);
-
-            $count = count($jsonObject['blocs']);
-            $transformedBlocs = [];
-            for ($i = 0; $i < $count; $i++) {
-                if ($jsonObject['blocs'][$i] != $id) {
-                    $transformedBlocs[] = $jsonObject['blocs'][$i];
-                }
-            }
-            $jsonObject['blocs'] = $transformedBlocs;
-            $updatedJsonContent = json_encode($jsonObject);
-            $updatedLayoutScriptTag = '<script type="application/json">' . $updatedJsonContent . '</script>';
-            $updatedFileContent = str_replace($layoutScriptTag, $updatedLayoutScriptTag, $fileContent);
-            file_put_contents($filePath, $updatedFileContent);
+        $json = json_decode(file_get_contents($this->jsonFilePath), true);
+        $target = &$this->getTargetPartOfJson($json, $page);
+        $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
+        $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
+        
+        if ($blockIndex !== null && $layoutIndex !== null) {
+            // Copy the object to the top-level blocs
+            $target['blocs'][] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
+            // Unset the object from layout blocks
+            unset($target['blocs'][$layoutIndex]['blocs'][$blockIndex]);
+            // Reindex the layout blocks to keep the same format after unset
+            $target['blocs'][$layoutIndex]['blocs'] = array_values($target['blocs'][$layoutIndex]['blocs']);
+            // Write the updated content back to the file
+            file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
         }
-
     }
 
     private function getJsonFromRequest($postValues)
@@ -597,7 +561,14 @@ class ContentManager
         $blockKey = $this->getBlockIndexById($id, $target['blocs']);
         if ($blockKey !== null) {
             return $target['blocs'][$blockKey]['html'];
+        } else {
+            // find bloc inside layout
+            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
+            if ($layout !== null && $bloc !== null) {
+                return $target['blocs'][$layout]['blocs'][$bloc]['html'];
+            }
         }
+        throw new Exception("Bloc not found");
     }
 
     private function getBlocContent($fileContent, $index)
@@ -654,9 +625,15 @@ class ContentManager
 
             $blocKey = $this->getBlockIndexById($id, $target['blocs']);
             if ($blocKey === null) {
-                throw new Exception("Id not found");
-            } 
-            $target['blocs'][$blocKey] = $this->updateJson($target['blocs'][$blocKey], $postValues);
+                list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
+                if ($layout !== null && $bloc !== null) {
+                    $target['blocs'][$layout]['blocs'][$bloc] = $this->updateJson($target['blocs'][$layout]['blocs'][$bloc], $postValues);
+                } else {
+                    throw new Exception("Id not found");
+                }
+            } else {
+                $target['blocs'][$blocKey] = $this->updateJson($target['blocs'][$blocKey], $postValues);
+            }
         }
 
         // Write the updated content back to the file
