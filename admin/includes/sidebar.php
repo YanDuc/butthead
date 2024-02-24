@@ -1,5 +1,5 @@
 <?php
-$jsonFilePath = '../previews/config.json';
+$jsonFilePath = './site.json';
 
 if (file_exists($jsonFilePath)) {
   $jsonData = json_decode(file_get_contents($jsonFilePath), true);

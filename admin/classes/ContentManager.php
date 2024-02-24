@@ -10,6 +10,7 @@ class ContentManager
     const TEMPLATE_PATH = __DIR__ . '/../../templates/';
     const IMAGES_PATH = __DIR__ . '/../../assets/img/';
     const PREVIEW_PATH = __DIR__ . '/../../previews/';
+    private $jsonFilePath = __DIR__ . '/../site.json';
 
     public function addContent($page, $bloc, ...$rest)
     {
@@ -84,10 +85,19 @@ class ContentManager
     public function getFormatedPageContent($page)
     {
         try {
-            $pageContent = $this->getPageContent($page);
-            $flatContentArray = $this->getArrayContent($pageContent);
-            $content = $this->getFormattedArrayContent($flatContentArray);
-            return $content;
+            Logger::log($page);
+            $json = json_decode(file_get_contents($this->jsonFilePath), true);
+
+            // Get the part of the JSON to update
+            $target = &$this->getTargetPartOfJson($json, $page);
+            Logger::log($target);
+
+            return (isset($target['blocs'])) ? $target['blocs'] : [];
+
+            // $pageContent = $this->getPageContent($page);
+            // $flatContentArray = $this->getArrayContent($pageContent);
+            // $content = $this->getFormattedArrayContent($flatContentArray);
+            // return $content;
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -336,19 +346,7 @@ class ContentManager
         try {
             // Get content from template
             $blocContent = file_get_contents(self::TEMPLATE_PATH . 'layouts/' . $layout, true);
-
-            // Add encapsulation div
             $nameOfBloc = explode('.', $layout)[0];
-
-            // Extract the style tag using regular expressions
-            $styleTagPattern = '/<style\b[^>]*>(.*?)<\/style>/s';
-            preg_match($styleTagPattern, $blocContent, $matches);
-            $styleTag = $matches[0];
-
-            // Remove the style tag from the content
-            $contentWithoutStyle = preg_replace($styleTagPattern, '', $blocContent);
-            $encapsulatedContent = '<div class="' . $nameOfBloc . '">' . $contentWithoutStyle . "</div>\n" . $styleTag;
-            $blocContent = $encapsulatedContent;
 
             // Write content to file
             $this->writeContentToFile($page, $nameOfBloc, $blocContent, [], false);
@@ -567,13 +565,13 @@ class ContentManager
         try {
             $maxWidth = null;
             $maxHeight = null;
-    
+
             // get max width and height inside content (type string like ' img | 50 | 50 ')
             $dimensions = explode(' | ', $content);
             $dimensions = array_map('trim', $dimensions);
             $maxWidth = $dimensions[1];
             $maxHeight = $dimensions[2];
-    
+
             $image = new Resize($file, $maxWidth, $maxHeight);
             if ($maxWidth > HTMLConfig::BREAKPOINTS['m']) {
                 $image->copyImage('_m', HTMLConfig::BREAKPOINTS['m']);
@@ -636,13 +634,38 @@ class ContentManager
 
     private function writeContentToFile($page, $nameOfBloc, $blocContent, $postValues, $isBloc = true)
     {
-        $this->page = $page;
-        error_log(print_r($postValues, true));
+        $json = json_decode(file_get_contents($this->jsonFilePath), true);
 
-        // Convert the array to a JSON string
-        $jsonString = $this->createJson($nameOfBloc, $postValues, $isBloc);
-        $content = "\n<!-- separator -->\n" . $blocContent . "\n<script type=\"application/json\">" . $jsonString . "</script>";
-        file_put_contents(self::PREVIEW_PATH . $page . '/index.html', $content, FILE_APPEND | LOCK_EX);
+        // Get the part of the JSON to update
+        $target = &$this->getTargetPartOfJson($json, $page);
+
+        $blocDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
+        $blocDatas = json_decode($blocDatas, true);
+
+        // add html
+        $blocDatas['html'] = preg_replace('/\s{2,}/', ' ', $blocContent);
+
+        // Update the JSON with the new bloc information
+        $target['blocs'][] = $blocDatas;
+
+        Logger::log($json);
+
+        // Update the JSON file
+        file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
+    }
+
+    private function &getTargetPartOfJson(&$json, $page)
+    {
+        $pathParts = explode('/', $page);
+        $target = &$json[$pathParts[0]];
+    
+        if (count($pathParts) > 1) {
+            foreach (array_slice($pathParts, 1) as $part) {
+                $target = &$target['subPages'][$part];
+            }
+        }
+        
+        return $target;
     }
 
     public function getBlocContentFromFile($page, $id)
@@ -717,10 +740,10 @@ class ContentManager
             if ($idPosition === false) {
                 throw new Exception("Id not found");
             }
-    
+
             // Find the positions of the separators
             $separatorPositions = $this->getSeparatorPositions($fileContent);
-    
+
             // Find the nearest separator positions before and after the "id" position
             $startPos = 0;
             $endPos = strlen($fileContent);
@@ -732,7 +755,7 @@ class ContentManager
                     break;
                 }
             }
-    
+
             // Get the bloc content
             $blocContent = substr($fileContent, $startPos, $endPos - $startPos);
         }

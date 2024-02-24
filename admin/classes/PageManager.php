@@ -2,8 +2,7 @@
 require_once __DIR__ . '/Logger.php';
 class PageManager
 {
-    private $jsonFilePath = __DIR__ . '/../../previews/config.json';
-    private $previewsFolder = __DIR__ . '/../../previews/';
+    private $jsonFilePath = __DIR__ . '/../site.json';
 
     public function add($pageName, $description, $parent = null)
     {
@@ -13,15 +12,6 @@ class PageManager
             $pageUrl = trim($pageUrl, '-');
             $pageUrl = str_replace(['à', 'â', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'û', 'ù', 'ü'], ['a', 'a', 'e', 'e', 'e', 'e', 'i', 'i', 'o', 'u', 'u', 'u'], $pageUrl);
             $pageUrl = strtolower($pageUrl);
-
-            if ($parent) {
-                $dirPath = $parent . '/' . $pageUrl;
-            } else {
-                $dirPath = $pageUrl;
-            }
-
-            // Create folder in previews
-            mkdir($this->previewsFolder . $dirPath, 0777);
 
             // Create or update JSON file
             $jsonData = [];
@@ -70,6 +60,7 @@ class PageManager
                     'order' => $newOrder
                 ];
             }
+            Logger::log($jsonData);
 
             file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
             return ['success' => true, 'page' => $pageUrl, 'parent' => $parent];
@@ -364,9 +355,6 @@ class PageManager
             }
         }
         if ($change) {
-            // rename folder
-            $newPath = $parent ? $parent . '/' . $url : $url;
-            rename($this->previewsFolder . $pagePath, $this->previewsFolder . $newPath);
             file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
         }
     }
@@ -389,11 +377,6 @@ class PageManager
                     break;
                 }
             }
-        }
-        // remove folder
-        $folderPath = $this->previewsFolder . $pagePath;
-        if (is_dir($folderPath)) {
-            $this->removeDirectory($folderPath);
         }
 
         file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
