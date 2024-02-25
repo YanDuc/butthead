@@ -20,7 +20,8 @@ class HTMLProcessor
         try {
             // get html page content
             $contentManager = new ContentManager();
-            $html = $contentManager->getPageContent($path);
+            $pageContent = $contentManager->getPageContent($path);
+            $blocsArray = array_values($pageContent['blocs']);;
 
             // get Meta data
             $pageManager = new PageManager();
@@ -32,36 +33,53 @@ class HTMLProcessor
             $globalStyle = "<style>" . $this->getGlobalStyles() . "</style>";
             // get header
             $contentManager = new ContentManager();
-            $header = $contentManager->getBlocContentFromFile('bh-header', 'bh-header');
+            $header = $contentManager->getBlocContentFromFile('bh-header', 'bh-header', false);
             $nav = $this->getNavigation($path);
-            $header = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header);
-            $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer');
+            $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
+            $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer', false);
 
-            $this->html = $header . '<!-- separator -->' . $html . '<!-- separator -->' . $footer;
-            $blocsArray = $this->splitHtml();
+            
+            $blocsArray = array_merge([$header], $blocsArray, [$footer]);
 
             // filter empty blocs
-            $blocsArray = array_filter($blocsArray, function ($block) {
-                return trim($block) !== '';
-            });
+            // $blocsArray = array_filter($blocsArray, function ($block) {
+            //     return trim($block) !== '';
+            // });
 
             // In your compile method
-            foreach ($blocsArray as $key => $block) {
-                $className = $this->extractClassName($block);
-                $blocsArray[$key] = $this->addClassInStyle($block, $className);
-                $blocsArray[$key] = $this->addClassInHtml($blocsArray[$key], $className);
-                $blocsArray[$key] = $this->addContent($blocsArray[$key]);
+            $blocsArray = $this->processBlocks($blocsArray);
+            $htmlString = '';
+            foreach ($blocsArray as $bloc) {
+                $htmlString .= $bloc['html'];
             }
-            $blocsArray = $this->moveBlocksInsideLayouts($blocsArray);
-            $htmlString = implode('', $blocsArray);
 
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
             $head = $this->getHead($title, $description, $style);
             $this->html = $this->formatAndMinimizeHtml($htmlString, $head);
             return $this->html;
         } catch (Exception $e) {
+            Logger::log($e->getMessage());
             throw new Exception($e->getMessage());
         }
+    }
+
+    private function processBlocks(&$blocks) {
+        foreach ($blocks as $key => $block) {
+            $className = isset($block['bloc']) ? $block['bloc'] : $block['layout'];
+            $blocks[$key]['html'] = $this->addClassInStyle($block['html'], $className);
+            $blocks[$key]['html'] = $this->addClassInHtml($blocks[$key]['html'], $className);
+            $blocks[$key] = $this->addContent($block); // Assuming addContent is a valid method
+    
+            if (isset($block['blocs'])) {
+                $replacementContent = $this->processBlocks($blocks[$key]['blocs']); // Get the recursive result
+                $htmlString = '';
+                foreach ($replacementContent as $layoutBlock) {
+                    $htmlString .= $layoutBlock['html'];
+                }
+                $blocks[$key]['html'] = str_replace('{{ content }}', $htmlString, $blocks[$key]['html']);
+            }
+        }
+        return $blocks;
     }
 
     private function getHead($title, $description, $styles)
@@ -111,7 +129,7 @@ class HTMLProcessor
     {
         $blocsToDelete = [];
         foreach ($blocsArray as $key => $value) {
-            if (str_contains($value, '"layout":')) {
+            if ($value['bloc'] === 'layout' && isset($value['bloc']['blocs']) && !empty($value['bloc']['blocs'])) {
                 $pattern = '/"blocs":(\[.*?\])/';
                 if (preg_match($pattern, $value, $matches)) {
                     $blocsIDs = json_decode($matches[1], true);
@@ -161,17 +179,17 @@ class HTMLProcessor
         $datas = $this->_extractData($content);
 
         // regex for getting content inside brackets
-        preg_match_all('/\{\{(.+?)\}\}/', $content, $matches);
+        preg_match_all('/\{\{(.+?)\}\}/', $content['html'], $matches);
         $contentToReplace = $matches[0];
         $i = 0;
         foreach ($contentToReplace as $key => $value) {
-            $pos = strpos($content, $value);
+            $pos = strpos($content['html'], $value);
             if (($pos !== false) && $this->containsDynamicInput($value)) {
                 if (str_contains($value, 'img')) {
                     $fileName = $datas[$i][0];
                     $alt = $datas[$i][1];
-                    $content = substr_replace(
-                        $content,
+                    $content['html'] = substr_replace(
+                        $content['html'],
                         "<picture>
                             " . ($this->isFileExists("{$fileName}_s.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['s'] . "px)\" srcset=\"../assets/img/{$fileName}_s.jpeg\">" : "") . "
                             " . ($this->isFileExists("{$fileName}_m.jpeg") ? "<source media=\"(max-width: " . HTMLConfig::BREAKPOINTS['m'] . "px)\" srcset=\"../assets/img/{$fileName}_m.jpeg\">" : "") . "
@@ -181,8 +199,8 @@ class HTMLProcessor
                         strlen($value)
                     );
                 } else {
-                    $content = substr_replace(
-                        $content,
+                    $content['html'] = substr_replace(
+                        $content['html'],
                         $datas[$i],
                         $pos,
                         strlen($value)
@@ -284,15 +302,8 @@ class HTMLProcessor
         return '';
     }
 
-    private function _extractData($content)
+    private function _extractData($data)
     {
-        // Get json
-        preg_match('/<script type="application\/json">(.*?)<\/script>/', $content, $matches);
-        $json = $matches[1];
-
-        // keep only json content with key starting by input or file
-        $data = json_decode($json, true);
-
         if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             // Handle JSON decoding error, e.g., log an error message or throw an exception
             $errorMessage = json_last_error_msg();
@@ -430,9 +441,9 @@ class HTMLProcessor
     {
         $className = $this->preventClassStartingByNumber($className);
         $content = preg_replace_callback('/<(\w+)(?:\s+id="([^"]*)")?(?:\s+class="([^"]*)")?>/', function ($matches) use ($className) {
-            $tag = $matches[1];
-            $id = $matches[2];
-            $class = $matches[3] ?: ''; // Use an empty string if no class is present
+            $tag = isset($matches[1]) ? $matches[1] : '';
+            $id = isset($matches[2]) ? $matches[2] : '';
+            $class = isset($matches[3]) ? $matches[3] : ''; // Use an empty string if no class is present
 
             if (
                 ($class !== '' && in_array($class, $this->htmlElementsWithCSS['classes'])) ||

@@ -18,25 +18,11 @@ class ContentManager
             if ($page === 'bh-header' || $page === 'bh-footer') {
                 $blocContent = $page === 'bh-header' ? file_get_contents(self::TEMPLATE_PATH . 'header.html', true) : file_get_contents(self::TEMPLATE_PATH . 'footer.html', true);
                 $nameOfBloc = $page === 'bh-header' ? 'header' : 'footer';
-                // if folder not exists
-                if (!file_exists(self::PREVIEW_PATH . $page)) {
-                    mkdir(self::PREVIEW_PATH . $page, 0777);
-                }
             } else {
                 // Get content from template
                 $blocContent = file_get_contents(self::TEMPLATE_PATH . 'blocs/' . $bloc, true);
                 $nameOfBloc = explode('.', $bloc)[0];
             }
-
-            // Extract the style tag using regular expressions
-            $styleTagPattern = '/<style\b[^>]*>(.*?)<\/style>/s';
-            preg_match($styleTagPattern, $blocContent, $matches);
-            $styleTag = $matches[0];
-
-            // Remove the style tag from the content
-            $contentWithoutStyle = preg_replace($styleTagPattern, '', $blocContent);
-            $encapsulatedContent = $contentWithoutStyle . "\n" . $styleTag;
-            $blocContent = $encapsulatedContent;
 
             // Write content to file
             $this->writeContentToFile($page, $nameOfBloc, $blocContent, $rest);
@@ -126,8 +112,8 @@ class ContentManager
     public function getPageContent($page)
     {
         try {
-            $filePath = self::PREVIEW_PATH . $page . '/index.html';
-            return file_get_contents($filePath);
+            $json = json_decode(file_get_contents($this->jsonFilePath), true);
+            return $this->getTargetPartOfJson($json, $page);
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -164,7 +150,6 @@ class ContentManager
 
     public function moveBlockUp($page, $id, $layout)
     {
-        // $filePath = self::PREVIEW_PATH . $page . '/index.html';
         $json = json_decode(file_get_contents($this->jsonFilePath), true);
         $target = &$this->getTargetPartOfJson($json, $page);
         try {
@@ -521,16 +506,23 @@ class ContentManager
 
     private function writeContentToFile($page, $nameOfBloc, $blocContent, $postValues, $isBloc = true)
     {
+        Logger::log($page);
+        Logger::log($nameOfBloc);
         $json = json_decode(file_get_contents($this->jsonFilePath), true);
 
         // Get the part of the JSON to update
         $target = &$this->getTargetPartOfJson($json, $page);
+        Logger::log($target);
 
         $blocDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
         $blocDatas = json_decode($blocDatas, true);
 
         // add html
         $blocDatas['html'] = preg_replace('/\s{2,}/', ' ', $blocContent);
+
+        if ($page === 'bh-header' || $page === 'bh-footer') {
+            $blocDatas['id'] = 'bh-' . $nameOfBloc;
+        }
 
         // Update the JSON with the new bloc information
         $target['blocs'][] = $blocDatas;
@@ -553,19 +545,27 @@ class ContentManager
         return $target;
     }
 
-    public function getBlocContentFromFile($page, $id)
+    public function getBlocContentFromFile($page, $id, $returnHtml = true)
     {
         $json = json_decode(file_get_contents($this->jsonFilePath), true);
         $target = &$this->getTargetPartOfJson($json, $page);
 
         $blockKey = $this->getBlockIndexById($id, $target['blocs']);
         if ($blockKey !== null) {
-            return $target['blocs'][$blockKey]['html'];
+            if ($returnHtml) {
+                return $target['blocs'][$blockKey]['html'];
+            } else {
+                return $target['blocs'][$blockKey];
+            }
         } else {
             // find bloc inside layout
             list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
             if ($layout !== null && $bloc !== null) {
-                return $target['blocs'][$layout]['blocs'][$bloc]['html'];
+                if ($returnHtml) {
+                    return $target['blocs'][$layout]['blocs'][$bloc]['html'];
+                } else {
+                    return $target['blocs'][$layout]['blocs'][$bloc];
+                }
             }
         }
         throw new Exception("Bloc not found");
@@ -614,26 +614,19 @@ class ContentManager
     private function updateContentInFileById($page, $id, $postValues)
     {
         $this->page = $page;
+        $json = json_decode(file_get_contents($this->jsonFilePath), true);
+        $target = &$this->getTargetPartOfJson($json, $page);
 
-        if ($id === 'bh-header' || $id === 'bh-footer') {
-            // $blocContent = str_replace('<!-- separator -->', '', $fileContent);
-            // $startPos = 0;
-            // $endPos = strlen($fileContent);
-        } else {
-            $json = json_decode(file_get_contents($this->jsonFilePath), true);
-            $target = &$this->getTargetPartOfJson($json, $page);
-
-            $blocKey = $this->getBlockIndexById($id, $target['blocs']);
-            if ($blocKey === null) {
-                list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
-                if ($layout !== null && $bloc !== null) {
-                    $target['blocs'][$layout]['blocs'][$bloc] = $this->updateJson($target['blocs'][$layout]['blocs'][$bloc], $postValues);
-                } else {
-                    throw new Exception("Id not found");
-                }
+        $blocKey = $this->getBlockIndexById($id, $target['blocs']);
+        if ($blocKey === null) {
+            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
+            if ($layout !== null && $bloc !== null) {
+                $target['blocs'][$layout]['blocs'][$bloc] = $this->updateJson($target['blocs'][$layout]['blocs'][$bloc], $postValues);
             } else {
-                $target['blocs'][$blocKey] = $this->updateJson($target['blocs'][$blocKey], $postValues);
+                throw new Exception("Id not found");
             }
+        } else {
+            $target['blocs'][$blocKey] = $this->updateJson($target['blocs'][$blocKey], $postValues);
         }
 
         // Write the updated content back to the file
