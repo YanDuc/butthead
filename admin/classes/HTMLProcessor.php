@@ -21,7 +21,8 @@ class HTMLProcessor
             // get html page content
             $contentManager = new ContentManager();
             $pageContent = $contentManager->getPageContent($path);
-            $blocsArray = array_values($pageContent['blocs']);;
+
+            $blocsArray = (isset($pageContent['blocs'])) ? array_values($pageContent['blocs']) : [];
 
             // get Meta data
             $pageManager = new PageManager();
@@ -37,17 +38,10 @@ class HTMLProcessor
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
             $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer', false);
-
-            
             $blocsArray = array_merge([$header], $blocsArray, [$footer]);
 
-            // filter empty blocs
-            // $blocsArray = array_filter($blocsArray, function ($block) {
-            //     return trim($block) !== '';
-            // });
-
             // In your compile method
-            $blocsArray = $this->processBlocks($blocsArray);
+            $blocsArray = &$this->processBlocks($blocsArray);
             $htmlString = '';
             foreach ($blocsArray as $bloc) {
                 $htmlString .= $bloc['html'];
@@ -63,12 +57,12 @@ class HTMLProcessor
         }
     }
 
-    private function processBlocks(&$blocks) {
+    private function &processBlocks(&$blocks) {
         foreach ($blocks as $key => $block) {
             $className = isset($block['bloc']) ? $block['bloc'] : $block['layout'];
             $blocks[$key]['html'] = $this->addClassInStyle($block['html'], $className);
             $blocks[$key]['html'] = $this->addClassInHtml($blocks[$key]['html'], $className);
-            $blocks[$key] = $this->addContent($block); // Assuming addContent is a valid method
+            $blocks[$key] = $this->addContent($blocks[$key]); // Assuming addContent is a valid method
     
             if (isset($block['blocs'])) {
                 $replacementContent = $this->processBlocks($blocks[$key]['blocs']); // Get the recursive result
@@ -342,18 +336,6 @@ class HTMLProcessor
         return $newArrayValues ?? [];
     }
 
-    private function splitHtml()
-    {
-        return explode("<!-- separator -->", $this->html);
-    }
-
-    private function extractClassName($block)
-    {
-        $classPattern = '/"(?:bloc|layout)":"(.*?)"/';
-        preg_match($classPattern, $block, $classMatch);
-        return isset($classMatch[1]) ? $classMatch[1] : '';
-    }
-
     private function addClassInStyle($content, $className)
     {
         // Extract styles
@@ -402,7 +384,6 @@ class HTMLProcessor
                 return $selector . ' {';
             }
         }, $styles);
-
         return $updatedStyles;
     }
 

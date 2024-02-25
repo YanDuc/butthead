@@ -314,6 +314,14 @@ class ContentManager
         if ($blockIndex !== null) {
             unset($target['blocs'][$blockIndex]);
             $target['blocs'] = array_values($target['blocs']);
+        } else {
+            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
+            Logger::log($layout);
+            Logger::log($bloc);
+            if ($layout !== null && $bloc !== null) {
+                unset($target['blocs'][$layout]['blocs'][$bloc]);
+                $target['blocs'][$layout]['blocs'] = array_values($target['blocs'][$layout]['blocs']);
+            }
         }
 
         // update json

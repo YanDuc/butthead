@@ -4,7 +4,7 @@ require_once __DIR__ . '/HTMLProcessor.php';
 require_once __DIR__ . '/Logger.php';
 class Builder
 {
-    const PREVIEWS_CONFIG = __DIR__ . '/../../previews/config.json';
+    const PREVIEWS_CONFIG = __DIR__ . '/../site.json';
     const BUILD_PATH = __DIR__ . '/../../build/';
     private $flatPages = [];
     public function __construct()
