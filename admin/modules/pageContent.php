@@ -15,8 +15,8 @@
         <h3>
             <?= _('Blocs') ?>
         </h3>
-        <?php foreach ($blocsArray as $key => $value) { ?>
-            <li id="<?= $key ?>" class="bloc">
+        <?php foreach ($blocksArray as $key => $value) { ?>
+            <li id="<?= $key ?>" class="block">
                 <?= $value ?></a>
             </li>
         <?php } ?>
@@ -37,23 +37,35 @@
     <?php
     function generateContentHTML($contentArray, $contents, $layoutID = null)
     {
+        global $blocksArray;
         $layout = isset($contentArray['layout']);
         $class = $layout ? 'layout' : 'draggable';
         $draggableAttribute = $layout ? '' : 'draggable="true"';
         $id = $contentArray['id'];
-        $isBlocsInsideLayout = isset($contentArray['layout']) && isset($contentArray['blocs']);
-        $blocs = $isBlocsInsideLayout ? $contentArray['blocs'] : [];
+        $isBlocsInsideLayout = isset($contentArray['layout']) && isset($contentArray['blocks']);
+        $blocks = $isBlocsInsideLayout ? $contentArray['blocks'] : [];
 
 
-        // get contents from blocs inside contentArray
-        $blocsContents = [];
-        foreach ($blocs as $bloc) {
-            $blocsContents[] = $bloc;
+        // get contents from blocks inside contentArray
+        $blocksContents = [];
+        foreach ($blocks as $block) {
+            $blocksContents[] = $block;
         }
 
         $html = "<section class=\"$class\" $draggableAttribute id=\"$id\">";
-        $html .= "<header class=\"bloc-header\">";
-        $html .= "<h3>" . ($contentArray['bloc'] ?? $contentArray['layout']) . "</h3>";
+        $html .= "<header class=\"block-header\">";
+        $html .= "<h3>" . ($contentArray['block'] ?? $contentArray['layout']) . "</h3>";
+        if ($layout) {
+            $html .= "<div>";
+            $html .= "<label>" . _('Add block') . ":</label>
+            <select class=\"layout-blocks\" id=" . $contentArray['id'] . ">
+            <option value=\"\"></option>";
+            foreach ($blocksArray as $key => $value) {
+                $html .= "<option value=\"" . $key . "\">" . $value . "</option>";
+            }
+            $html .= "</select>";
+            $html .= "</div>";
+        }
         $html .= "<div class=\"actions\">";
         $html .= "<div class=\"chevron-icons\">";
         $html .= "<span class=\"chevron-up-icon\" id=" . $contentArray['id'] . " data-layout-id=" . $layoutID . ">▲</span>";
@@ -66,9 +78,6 @@
         $html .= "<button class=\"update-button\" id=" . $contentArray['id'] . ">" . _('Update') . "</button>";
         $html .= "</div>";
         $html .= "</header>";
-        if ($layout) {
-            $html .= "<div class=\"drop-zone drop-container\"></div>";
-        }
         $html .= "<div class=\"content\">";
 
         foreach ($contentArray as $key => $value) {
@@ -81,8 +90,8 @@
         }
 
         // Recursively generate HTML for subparts
-        foreach ($blocsContents as $blocContent) {
-            $html .= generateContentHTML($blocContent, $contents, $contentArray['id']);
+        foreach ($blocksContents as $blockContent) {
+            $html .= generateContentHTML($blockContent, $contents, $contentArray['id']);
         }
 
         $html .= "</div>";

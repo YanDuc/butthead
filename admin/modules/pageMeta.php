@@ -17,7 +17,7 @@
         <?php endif; ?>
 
         <label for="pageName">
-            <?= _("Page Name") ?>:
+            <?= _("Title") ?>:
         </label>
         <input type="text" id="pageName" name="pageName" minlength="5" maxlength="80" required>
 

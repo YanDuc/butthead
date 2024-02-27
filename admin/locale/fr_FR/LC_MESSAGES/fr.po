@@ -188,8 +188,8 @@ msgstr "Modifier"
 #~ msgid "Parameters"
 #~ msgstr "Paramètres"
 
-#~ msgid "Are you sure you want to delete this bloc ?"
-#~ msgstr "Êtes-vous sûr(e) de vouloir supprimer ce bloc ?"
+#~ msgid "Are you sure you want to delete this block ?"
+#~ msgstr "Êtes-vous sûr(e) de vouloir supprimer ce block ?"
 
 #~ msgid "Are you sure you want to delete %s ?"
 #~ msgstr "Êtes-vous sûr(e) de vouloir supprimer %s ?"

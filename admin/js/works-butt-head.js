@@ -7,10 +7,31 @@ const currentPage = document.getElementById("page").value;
 const parent = document.getElementById("parent").value;
 const page = parent ? parent + "/" + currentPage : currentPage;
 
-const liBlocs = document.querySelectorAll("li.bloc");
+const liBlocs = document.querySelectorAll("li.block");
 const liLayouts = document.querySelectorAll("li.layout");
 const pageContent = document.getElementById("page-content");
 const preview = document.getElementById("preview");
+
+const layoutBlocs = document.querySelectorAll(".layout-blocks");
+layoutBlocs.forEach((block) => {
+  block.addEventListener("change", async (event) => {
+    const block = event.target.value;
+    const layoutID = event.target.id;
+    const res = await createBlock(block);
+
+    if (res.id) {
+      const form = new FormData();
+      form.append("page", page);
+      form.append("blockID", res.id);
+      form.append("layoutID", layoutID);
+      await getResponse("ContentManager", "addBlockToLayout", form);
+      location.reload();
+    } else {
+      location.reload();
+    }
+
+  });
+});
 
 async function confirmDelete(page) {
   const deleteForm = new FormData();
@@ -55,7 +76,7 @@ liLayouts.forEach((li) => {
     // Create a new FormData object
     const formData = new FormData();
 
-    // Append the bloc to the formData
+    // Append the block to the formData
     formData.append("page", page);
     formData.append("layout", layout);
 
@@ -110,62 +131,68 @@ function constructAndReplaceForm(
   addTouchedClass();
 }
 
-liBlocs.forEach((li) => {
-  li.addEventListener("click", async (event) => {
-    const bloc = event.currentTarget.id;
-
+async function createBlock(block) {
+  return new Promise(async (resolve, reject) => {    
     // Create a new FormData object
     const formData = new FormData();
-
-    // Append the bloc to the formData
-    formData.append("bloc", bloc);
-
-    // Send request to PHP
-    event.preventDefault();
-
+  
+    // Append the block to the formData
+    formData.append("block", block);
+  
     try {
-      // essai
       const formBuilder = new FormData();
-      formBuilder.append("bloc", bloc);
+      formBuilder.append("block", block);
       const inputsArray = await getResponse(
         "ContentManager",
         "getForm",
         formBuilder
       );
-
+  
       // Construct and replace the form
       constructAndReplaceForm(inputsArray, "create-button");
-
+  
       document
         .querySelector("#create-button")
         .addEventListener("click", async function (event) {
           try {
             event.preventDefault(); // Prevent the default form submission
-
+  
             // Access the form element using its name
             const form = document.forms["default-form"];
-
+  
             if (!form.checkValidity()) {
               form.reportValidity();
               return;
             } else {
               // Create a new FormData object
               let formData = new FormData();
-
-              // Append the page and bloc values to the formData
+  
+              // Append the page and block values to the formData
               formData.append("page", page);
-              formData.append("bloc", bloc);
+              formData.append("block", block);
               formData = concatFormData(formData, form);
-
-              await getResponse("ContentManager", "addContent", formData);
-              location.reload();
+  
+              resolve(await getResponse("ContentManager", "addContent", formData));
             }
           } catch (error) {
-            console.error("error:", error);
+            reject(error);
           }
         });
     } catch (error) {
-      console.error("Error:", error);
+      reject(error);
+    }
+  })
+}
+
+liBlocs.forEach((li) => {
+  li.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const block = event.currentTarget.id;
+    try {
+      await createBlock(block);
+      location.reload();
+    } catch (error) {
+      console.error("error:", error);
     }
   });
 });
@@ -208,7 +235,7 @@ document.addEventListener("click", async function (event) {
               // Create a new FormData object
               let formData = new FormData();
 
-              // Append the page and bloc values to the formData
+              // Append the page and block values to the formData
               formData.append("page", page);
               formData.append("id", blockId);
 
@@ -231,7 +258,7 @@ document.addEventListener("click", async function (event) {
       modal.style.display = "block";
       const modalContent = document.getElementById("modal-content");
       modalContent.innerHTML = await translate(
-        "Are you sure you want to delete this bloc ?"
+        "Are you sure you want to delete this block ?"
       );
       document.getElementById("modal-close").addEventListener("click", () => {
         modal.style.display = "none";
@@ -293,25 +320,13 @@ const dropHandler = async (event) => {
   const droppedElement = document.getElementById(droppedElementId);
 
   // Get the $contentArray['id'] of the dropped element
-  const droppedElementIdValue = droppedElement.id;
-
-  // Find the nearest parent element with the class 'drop-container'
-  const dropContainer = event.target.closest(".drop-container");
-  const layoutID = dropContainer.parentElement.id;
-
-  if (dropContainer) {
-    const contentDiv = dropContainer.nextElementSibling;
-    if (contentDiv && contentDiv.classList.contains("content")) {
-      contentDiv.appendChild(droppedElement);
-    }
-  } else {
-    event.target.appendChild(droppedElement);
-  }
+  const blockID = droppedElement.id;
+  const layoutID = event.currentTarget.id;
 
   try {
     const form = new FormData();
     form.append("page", page);
-    form.append("blockID", droppedElementIdValue);
+    form.append("blockID", blockID);
     form.append("layoutID", layoutID);
     await getResponse("ContentManager", "addBlockToLayout", form);
     location.reload();
@@ -322,7 +337,7 @@ const dropHandler = async (event) => {
 };
 
 const draggableElements = document.querySelectorAll(".draggable");
-const dropContainers = document.querySelectorAll(".drop-container");
+const dropContainers = document.querySelectorAll(".layout");
 
 draggableElements.forEach((element) => {
   element.addEventListener("dragstart", dragStartHandler);

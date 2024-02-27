@@ -46,7 +46,7 @@
     } catch (error) {
         // Create
         const formData = new FormData();
-        formData.append("bloc", 'footer.html');
+        formData.append("block", 'footer.html');
 
         // Send a POST request to handle_works-butt-head.php using fetch
         const inputsArray = await getResponse(
@@ -67,9 +67,9 @@
                 // Create a new FormData object
                 let formData = new FormData();
 
-                // Append the page and bloc values to the formData
+                // Append the page and block values to the formData
                 formData.append("page", "bh-footer");
-                formData.append("bloc", "footer.html");
+                formData.append("block", "footer.html");
                 formData = concatFormData(formData, form);
 
                 try {

@@ -2,23 +2,36 @@
 include_once('classes/ContentManager.php');
 $contentManager = new ContentManager();
 $contentFolder = $parent ? $parent . '/' . $page : $page;
+$jsonFilePath = './site.json';
+$isPageExists = false;
+
+if (file_exists($jsonFilePath)) {
+    $jsonData = json_decode(file_get_contents($jsonFilePath), true);
+    if ($parent) {
+        $isPageExists = isset($jsonData[$parent]['subPages'][$page]) ? true : false;
+    } else {
+        $isPageExists = isset($jsonData[$page]) ? true : false;
+    }
+} else {
+    $jsonData = [];
+}
 
 // return 404 if page doesn't exist
 if (!$page && is_dir('../previews/root')) {
     $contentFolder = 'root';
-} else if (!$page || !is_dir('../previews/' . $contentFolder)) {
+} else if (!$page || !$isPageExists) {
     include_once('modules/404.php');
     exit;
 }
 
-// list of blocs from templates folder
-$files = scandir('../templates/blocs');
-$blocsArray = [];
+// list of blocks from templates folder
+$files = scandir('../templates/blocks');
+$blocksArray = [];
 foreach ($files as $key => $value) {
     if ($value != '.' && $value != '..') {
         // key value array with key as name and value as path
         $name = explode('.', $value)[0];
-        $blocsArray[$value] = $name;
+        $blocksArray[$value] = $name;
     }
 }
 // list of layouts from templates folder

@@ -1,5 +1,5 @@
 <?php
-$jsonFilePath = '../previews/config.json';
+$jsonFilePath = './site.json';
 
 if (file_exists($jsonFilePath)) {
   $jsonData = json_decode(file_get_contents($jsonFilePath), true);
@@ -34,6 +34,7 @@ if (file_exists($jsonFilePath)) {
   </a>
   <ul id="sortable">
     <?php foreach ($jsonData as $id => $data): ?>
+      <?php if (!isset($data['pageName'])) { continue; } ?>
       <?php $allowChange = $data['unauthorizedUsers'] && in_array($_SESSION['loggedIn']['email'], $data['unauthorizedUsers']) ? false : true ?>
       <div class="drop-zone-nav" id="<?= $id ?>"></div>
       <li id="<?= $id ?>" draggable="true" ondragstart="handleDragStart(event, '<?= $id ?>')">
