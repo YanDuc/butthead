@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/Logger.php';
+require_once __DIR__ . '/Builder.php';
 class FormBuilder
 {
     private $dynamicContent;
@@ -17,6 +18,8 @@ class FormBuilder
                 $this->createInputFile('file' . $key + 1, $content, $value);
             } elseif (str_contains($content, 'date')) {
                 $this->inputDate('input' . $key + 1, $content, $value);
+            } elseif (str_contains($content, 'link')) {
+                $this->createLink('link' . $key + 1, $content, $value);
             }
         }
     }
@@ -56,13 +59,15 @@ class FormBuilder
     {
         // get label content (type string like ' input | "myLabel" | 50 | 50 ')
         $dimensions = explode('|', $content);
-        if (!is_numeric(trim($dimensions[1]))) {
+        if (isset($dimensions[1]) && !is_numeric(trim($dimensions[1]))) {
             return $dimensions[1];
         } else {
             if (str_contains($content, 'input')) {
                 return 'Input';
             } elseif (str_contains($content, 'textarea')) {
                 return 'Textarea';
+            } elseif (str_contains($content, 'link')) {
+                return 'Link';
             } else {
                 return 'File';
             }
@@ -113,6 +118,24 @@ class FormBuilder
         if (!empty($value)) {
             $this->form[] = "<input type='hidden' name='previous_$name' id='previous_$name' value='$value[0]'>";
         }
+    }
+
+    private function createLink($name, $data, $value = '')
+    {
+        $builder = new Builder();
+        $flatPages = $builder->getFlatPages();
+        $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label><br>' : '';
+        if (isset($flatPages) && !empty($flatPages)) {
+            $select = '<select name="url_' . $name . '" id="url_' . $name . '" required>';
+            $select.= '<option value="">Select Page</option>';
+            foreach ($flatPages as $page) {
+                $select .= '<option value="' . $page . '"' . ($value[1] == $page ? 'selected' : '') . '>' . $page . '</option>';
+            }
+            $select .= '</select>';
+        }
+        
+        $input = $label . $select .'<input type="text" placeholder="Name" style="margin-top: 10px;" name="' . $name . '" id="' . $name . '" value="' . $value[0] . '" required>';
+        $this->form[] = $input;
     }
 
     private function log($message)

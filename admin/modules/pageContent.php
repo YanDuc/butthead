@@ -87,6 +87,9 @@
             if (str_contains($key, 'file')) {
                 $html .= "<div><img src=\"../assets/img/$value[0].jpeg\" alt=\"$value[1]\"></div>";
             }
+            if (str_contains($key, 'link')) {
+                $html .= "<div class=\"text\">$value[1] $value[0]</div>";
+            }
         }
 
         // Recursively generate HTML for subparts

@@ -382,7 +382,7 @@ class ContentManager
         }
         $json['id'] = uniqid();
         foreach ($postValues as $key => $value) {
-            if (str_contains($key, 'alt_file')) {
+            if (str_contains($key, 'alt_file') || str_contains($key, 'url_link')) {
                 continue;
             } else if (str_contains($key, 'file')) {
                 preg_match('/file(\d+)/', $key, $matches);
@@ -397,6 +397,9 @@ class ContentManager
             } else if (str_contains($key, 'input')) {
                 $i++;
                 $json[$key] = $value;
+            } else if (str_contains($key, 'link')) {
+                $i++;
+                $json[$key] = [$value, $postValues['url_link' . $i]];
             }
         }
 
@@ -466,6 +469,10 @@ class ContentManager
                 preg_match('/input(\d+)/', $key, $matches);
                 $i = (int) $matches[1];
                 $json['input' . $i] = $value;
+            } else if (str_contains($key, 'link')) {
+                preg_match('/link(\d+)/', $key, $matches);
+                $i = (int) $matches[1];
+                $json['link' . $i] = [$value, $postValues['url_link' . $i]];
             }
         }
         return $json;

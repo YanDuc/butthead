@@ -17,6 +17,11 @@ class Builder
         }
     }
 
+    public function getFlatPages()
+    {
+        return $this->flatPages;
+    }
+
     public function build($page = false)
     {
         $this->flatPages = $page ? [$page] : $this->flatPages;

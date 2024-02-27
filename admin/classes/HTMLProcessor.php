@@ -192,6 +192,16 @@ class HTMLProcessor
                         $pos,
                         strlen($value)
                     );
+                } else if (str_contains($value, 'link')) {
+                    $name = $datas[$i][0];
+                    $url = $datas[$i][1];
+                    $content['html'] = substr_replace(
+                        $content['html'],
+                        "<a href=\"{$url}\">{$name}</a>",
+                        $pos,
+                        strlen($value)
+                    );
+                
                 } else {
                     $content['html'] = substr_replace(
                         $content['html'],
@@ -305,7 +315,7 @@ class HTMLProcessor
         } else {
             // Filter the keys and keep only the ones starting with "input" or "file"
             $filteredKeys = array_filter(array_keys($data), function ($key) {
-                return preg_match('/^(input|file|alt_file)\d*$/', $key);
+                return preg_match('/^(input|file|alt_file|link)\d*$/', $key);
             });
 
             // Filter keys starting with "file"
