@@ -236,8 +236,11 @@ input[type="submit"]:hover {
   /* max-height: 150px; */
   overflow: hidden;
 }
+.right-content section.layout {
+  border: 2px dashed darkgray;
+}
 
-.bloc-header {
+.block-header {
   display: flex;
   justify-content: space-between;
 }
@@ -286,8 +289,10 @@ input[type="submit"]:hover {
 }
 
 #page-header h1 {
-  width: 50%;
+  width: 80%;
   padding-left: 10px;
+  padding-right: 15px;
+  font-size: 25px;
 }
 
 #modal {

@@ -9,27 +9,32 @@ class ContentManager
     private $page = null;
     const TEMPLATE_PATH = __DIR__ . '/../../templates/';
     const IMAGES_PATH = __DIR__ . '/../../assets/img/';
-    const PREVIEW_PATH = __DIR__ . '/../../previews/';
     private $jsonFilePath = __DIR__ . '/../site.json';
+    private $json;
+    private $target;
+    private $targetDestination; // using when moving block to another layout
 
-    public function addContent($page, $bloc, ...$rest)
+
+    public function __construct()
+    {
+        $this->json = json_decode(file_get_contents($this->jsonFilePath), true);
+    }
+
+    public function addContent($page, $block, ...$rest)
     {
         try {
             if ($page === 'bh-header' || $page === 'bh-footer') {
-                $blocContent = $page === 'bh-header' ? file_get_contents(self::TEMPLATE_PATH . 'header.html', true) : file_get_contents(self::TEMPLATE_PATH . 'footer.html', true);
+                $blockContent = $page === 'bh-header' ? file_get_contents(self::TEMPLATE_PATH . 'header.html', true) : file_get_contents(self::TEMPLATE_PATH . 'footer.html', true);
                 $nameOfBloc = $page === 'bh-header' ? 'header' : 'footer';
             } else {
                 // Get content from template
-                $blocContent = file_get_contents(self::TEMPLATE_PATH . 'blocs/' . $bloc, true);
-                $nameOfBloc = explode('.', $bloc)[0];
+                $blockContent = file_get_contents(self::TEMPLATE_PATH . 'blocks/' . $block, true);
+                $nameOfBloc = explode('.', $block)[0];
             }
 
             // Write content to file
-            $this->writeContentToFile($page, $nameOfBloc, $blocContent, $rest);
-
-            // Return JSON response
-            $json = $this->getJsonFromRequest($rest);
-            return json_encode($json);
+            $blockDatas = $this->writeContentToFile($page, $nameOfBloc, $blockContent, $rest);
+            return $blockDatas;
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -42,23 +47,23 @@ class ContentManager
         try {
             $page = 'header';
             // Get content from template
-            $blocContent = file_get_contents(self::TEMPLATE_PATH . 'header.html', true);
+            $blockContent = file_get_contents(self::TEMPLATE_PATH . 'header.html', true);
 
             // Add encapsulation div
             $nameOfBloc = 'header';
 
             // Extract the style tag using regular expressions
             $styleTagPattern = '/<style\b[^>]*>(.*?)<\/style>/s';
-            preg_match($styleTagPattern, $blocContent, $matches);
+            preg_match($styleTagPattern, $blockContent, $matches);
             $styleTag = $matches[0];
 
             // Remove the style tag from the content
-            $contentWithoutStyle = preg_replace($styleTagPattern, '', $blocContent);
+            $contentWithoutStyle = preg_replace($styleTagPattern, '', $blockContent);
             $encapsulatedContent = '<div class="' . $nameOfBloc . '">' . $contentWithoutStyle . "</div>\n" . $styleTag;
-            $blocContent = $encapsulatedContent;
+            $blockContent = $encapsulatedContent;
 
             // Write content to file
-            $this->writeContentToFile($page, $nameOfBloc, $blocContent, $postValues);
+            $this->writeContentToFile($page, $nameOfBloc, $blockContent, $postValues);
 
             // Return JSON response
             $json = $this->getJsonFromRequest($postValues);
@@ -71,9 +76,8 @@ class ContentManager
     public function getFormatedPageContent($page)
     {
         try {
-            $json = json_decode(file_get_contents($this->jsonFilePath), true);
-            $target = &$this->getTargetPartOfJson($json, $page);
-            return (isset($target['blocs'])) ? $target['blocs'] : [];
+            $this->updateTarget($this->json, $page);
+            return (isset($this->target['blocks'])) ? $this->target['blocks'] : [];
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -82,25 +86,15 @@ class ContentManager
     public function getForm(...$postValues)
     {
         try {
-            if (isset($postValues['bloc'])) {
-                $dynamicContents = $this->getDynamicContent($postValues['bloc']);
+            if (isset($postValues['block'])) {
+                $dynamicContents = $this->getDynamicContent($postValues['block']);
                 $formBuilder = new FormBuilder($dynamicContents, null);
             } else if ($postValues['page'] && $postValues['id']) {
-                $json = json_decode(file_get_contents($this->jsonFilePath), true);
-                $target = &$this->getTargetPartOfJson($json, $postValues['page']);
-                $blockKey = $this->getBlockIndexById($postValues['id'], $target['blocs']);
-                if ($blockKey !== null) {
-                    $dynamicInputs = $this->extractDynamicInput($target['blocs'][$blockKey]['html']);
-                    $values = $this->extractValues($target['blocs'][$blockKey]);
+                $blockIndex = $this->updateTargetAndGetBlockIndex($postValues['page'], $postValues['id']);
+                if ($blockIndex !== null) {
+                    $dynamicInputs = $this->extractDynamicInput($this->target[$blockIndex]['html']);
+                    $values = $this->extractValues($this->target[$blockIndex]);
                     $formBuilder = new FormBuilder($dynamicInputs, $values);
-                } else {
-                    // find bloc inside layout
-                    list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($postValues['id'], $target['blocs']);
-                    if ($layout !== null && $bloc !== null) {
-                        $dynamicInputs = $this->extractDynamicInput($target['blocs'][$layout]['blocs'][$bloc]['html']);
-                        $values = $this->extractValues($target['blocs'][$layout]['blocs'][$bloc]);
-                        $formBuilder = new FormBuilder($dynamicInputs, $values);
-                    }
                 }
             }
             return $formBuilder->form;
@@ -112,8 +106,8 @@ class ContentManager
     public function getPageContent($page)
     {
         try {
-            $json = json_decode(file_get_contents($this->jsonFilePath), true);
-            return $this->getTargetPartOfJson($json, $page);
+            $this->updateTarget($this->json, $page);
+            return $this->target;
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -150,62 +144,23 @@ class ContentManager
 
     public function moveBlockUp($page, $id, $layout)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-        try {
-            if (!$layout) {
-                $blocKey = $this->getBlockIndexById($id, $target['blocs']);
-                if ($blocKey !== null && $blocKey > 0) {
-                    $temp = $target['blocs'][$blocKey];
-                    $target['blocs'][$blocKey] = $target['blocs'][$blocKey - 1];
-                    $target['blocs'][$blocKey - 1] = $temp;
-                }
-                // Write the updated content back to the file
-                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-            } else {
-                $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
-                $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
-                if ($blockIndex !== null && $blockIndex > 0) {
-                    $temp = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
-                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex - 1];
-                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex - 1] = $temp;
-                }
-                // Write the updated content back to the file
-                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-            }
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
+        if ($blockIndex !== null && $blockIndex > 0) {
+            $temp = $this->target[$blockIndex];
+            $this->target[$blockIndex] = $this->target[$blockIndex - 1];
+            $this->target[$blockIndex - 1] = $temp;
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
         }
     }
 
     public function moveBlockDown($page, $id, $layout)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-        try {
-            if (!$layout) {
-                $blocKey = $this->getBlockIndexById($id, $target['blocs']);
-                if ($blocKey !== null && $blocKey < count($target['blocs']) - 1) {
-                    $temp = $target['blocs'][$blocKey];
-                    $target['blocs'][$blocKey] = $target['blocs'][$blocKey + 1];
-                    $target['blocs'][$blocKey + 1] = $temp;
-                }
-
-                // Write the updated content back to the file
-                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-            } else {
-                $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
-                $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
-                if ($blockIndex !== null && $blockIndex < count($target['blocs'][$layoutIndex]['blocs']) - 1) {
-                    $temp = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
-                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex + 1];
-                    $target['blocs'][$layoutIndex]['blocs'][$blockIndex + 1] = $temp;
-                }
-                // Write the updated content back to the file
-                file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-            }
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
+        if ($blockIndex !== null && $blockIndex < count($this->target) - 1) {
+            $temp = $this->target[$blockIndex];
+            $this->target[$blockIndex] = $this->target[$blockIndex + 1];
+            $this->target[$blockIndex + 1] = $temp;
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
         }
     }
 
@@ -225,11 +180,11 @@ class ContentManager
     {
         try {
             // Get content from template
-            $blocContent = file_get_contents(self::TEMPLATE_PATH . 'layouts/' . $layout, true);
+            $blockContent = file_get_contents(self::TEMPLATE_PATH . 'layouts/' . $layout, true);
             $nameOfBloc = explode('.', $layout)[0];
 
             // Write content to file
-            $this->writeContentToFile($page, $nameOfBloc, $blocContent, [], false);
+            $this->writeContentToFile($page, $nameOfBloc, $blockContent, [], false);
 
             // Return JSON response
             $json = $this->getJsonFromRequest([]);
@@ -239,14 +194,14 @@ class ContentManager
         }
     }
 
-    public function getDynamicContent($bloc)
+    public function getDynamicContent($block)
     {
         try {
-            if ($bloc === 'header.html' || $bloc === 'footer.html') {
-                $content = file_get_contents(self::TEMPLATE_PATH . $bloc, true);
+            if ($block === 'header.html' || $block === 'footer.html') {
+                $content = file_get_contents(self::TEMPLATE_PATH . $block, true);
             } else {
                 // get content from template
-                $content = file_get_contents(self::TEMPLATE_PATH . 'blocs/' . $bloc, true);
+                $content = file_get_contents(self::TEMPLATE_PATH . 'blocks/' . $block, true);
             }
 
             return $this->extractDynamicInput($content);
@@ -264,10 +219,8 @@ class ContentManager
 
     private function extractValues($data)
     {
-        // Remove bloc and id from values
-        unset($data['bloc']);
-        unset($data['id']);
-        unset($data['html']);
+        // Remove block and id from values
+        $data = array_intersect_key($data, array_flip(preg_grep('/^(?:' . implode('|', HTMLConfig::DATAS_KEYS) . ')/', array_keys($data))));
 
         // Sort values by key
         // Custom sorting function based on the number at the end of the key
@@ -297,37 +250,47 @@ class ContentManager
 
 
     public function updateContent($page, $id, ...$postValues)
-    {
-        // Update content in file
-        $this->updateContentInFileById($page, $id, $postValues);
-        // Return JSON response
-        return ['success' => true];
+    {   
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
+        if ($blockIndex !== null) {
+            $this->target[$blockIndex] = $this->updateJson($this->target[$blockIndex], $postValues);
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+            return ['success' => true];
+        } else {
+            throw new Exception("Bloc not found");
+        }
     }
 
     public function deleteContent($page, $id)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-        $blockIndex = $this->getBlockIndexById($id, $target['blocs']);
-
-        // delete bloc
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
         if ($blockIndex !== null) {
-            unset($target['blocs'][$blockIndex]);
-            $target['blocs'] = array_values($target['blocs']);
+            unset($this->target[$blockIndex]);
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+            return ['success' => true];
+        }
+    }
+
+    private function &updateTargetAndGetBlockIndex($page, $id, $targetDestination = false)
+    {
+        $this->page = $page;
+        $target = $targetDestination ? 'targetDestination' : 'target';
+
+        $this->updateTarget($this->json, $page, $targetDestination);
+        $blockIndex = $this->getBlockIndexById($id, $this->{$target}['blocks']);
+        if ($blockIndex !== null) {
+            $this->{$target} = &$this->{$target}['blocks'];
+            return $blockIndex;
         } else {
-            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
-            Logger::log($layout);
-            Logger::log($bloc);
-            if ($layout !== null && $bloc !== null) {
-                unset($target['blocs'][$layout]['blocs'][$bloc]);
-                $target['blocs'][$layout]['blocs'] = array_values($target['blocs'][$layout]['blocs']);
+            list('layout' => $layout, 'block' => $block) = $this->getBlockIndexInsideLayout($id, $this->{$target}['blocks']);
+            if ($layout !== null && $block !== null) {
+                $this->{$target} = &$this->{$target}['blocks'][$layout]['blocks'];
+                return $block;
             }
         }
-
-        // update json
-        file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-        return ['success' => true];
+        return null;
     }
+
 
     private function getBlockIndexById($id, $contents)
     {
@@ -342,64 +305,59 @@ class ContentManager
     private function getBlockIndexInsideLayout($id, $contents)
     {
         foreach ($contents as $key => $content) {
-            if (isset($content['layout']) && count($content['blocs']) > 0) {
-                foreach ($content['blocs'] as $blocKey => $bloc) {
-                    if (isset($bloc['id']) && $bloc['id'] === $id) {
-                        return ['layout' => $key, 'bloc' => $blocKey];
+            if (isset($content['layout']) && isset($content['blocks']) && count($content['blocks']) > 0) {
+                foreach ($content['blocks'] as $blockKey => $block) {
+                    if (isset($block['id']) && $block['id'] === $id) {
+                        return ['layout' => $key, 'block' => $blockKey];
                     }
                 }
             }
         }
-        return ['layout' => null, 'bloc' => null];
+        return ['layout' => null, 'block' => null];
     }
 
     public function addBlockToLayout($page, $blockID, $layoutID)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-        $blockIndex = $this->getBlockIndexById($blockID, $target['blocs']);
-        $layoutIndex = $this->getBlockIndexById($layoutID, $target['blocs']);
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $blockID);
+        $layoutIndex = $this->updateTargetAndGetBlockIndex($page, $layoutID, true);
+
         if ($blockIndex !== null && $layoutIndex !== null) {
-            $target['blocs'][$layoutIndex]['blocs'][] = $target['blocs'][$blockIndex];
-            unset($target['blocs'][$blockIndex]);
-            $target['blocs'] = array_values($target['blocs']);
+            $this->targetDestination[$layoutIndex]['blocks'][] = $this->target[$blockIndex];
+            unset($this->target[$blockIndex]);
 
             // Write the updated content back to the file
-            file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
         }
     }
 
     public function removeBlockFromLayout($page, $id, $layout)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-        $layoutIndex = $this->getBlockIndexById($layout, $target['blocs']);
-        $blockIndex = $this->getBlockIndexById($id, $target['blocs'][$layoutIndex]['blocs']);
-        
+
+        $this->updateTarget($this->json, $page);
+        $layoutIndex = $this->getBlockIndexById($layout, $this->target['blocks']);
+        $blockIndex = $this->getBlockIndexById($id, $this->target['blocks'][$layoutIndex]['blocks']);
+
         if ($blockIndex !== null && $layoutIndex !== null) {
-            // Copy the object to the top-level blocs
-            $target['blocs'][] = $target['blocs'][$layoutIndex]['blocs'][$blockIndex];
+            // Copy the object to the top-level blocks
+            $this->target['blocks'][] = $this->target['blocks'][$layoutIndex]['blocks'][$blockIndex];
             // Unset the object from layout blocks
-            unset($target['blocs'][$layoutIndex]['blocs'][$blockIndex]);
+            unset($this->target['blocks'][$layoutIndex]['blocks'][$blockIndex]);
             // Reindex the layout blocks to keep the same format after unset
-            $target['blocs'][$layoutIndex]['blocs'] = array_values($target['blocs'][$layoutIndex]['blocs']);
+            $this->target['blocks'][$layoutIndex]['blocks'] = array_values($this->target['blocks'][$layoutIndex]['blocks']);
             // Write the updated content back to the file
-            file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
         }
     }
 
     private function getJsonFromRequest($postValues)
     {
         $json = null;
-
-        // Loop on all input posts
         foreach ($postValues as $key => $value) {
             $json[$key] = $value;
         }
 
         // Loop on all files
         foreach ($_FILES as $key => $value) {
-            // If key contains file, copy the file to the previews folder
             $file = $value;
             $ext = explode('.', $file['name'])[1];
             $pathDestination = self::IMAGES_PATH . uniqid() . '.' . $ext;
@@ -411,7 +369,6 @@ class ContentManager
             copy($file['tmp_name'], $pathDestination);
             $json[$key] = $pathDestination;
         }
-
         return $json;
     }
 
@@ -419,7 +376,7 @@ class ContentManager
     {
         $json = [];
         if ($isBloc) {
-            $json['bloc'] = $nameOfBloc;
+            $json['block'] = $nameOfBloc;
         } else {
             $json['layout'] = $nameOfBloc;
         }
@@ -483,8 +440,6 @@ class ContentManager
                 preg_match('/file(\d+)/', $key, $matches);
                 $i = (int) $matches[1];
 
-                // if key contains file
-                // copy file to previews folder
                 if (!$value || empty($value) || empty($value['name']) || $value === '{}') {
                     // get post value with key including previous_file
                     $fileKey = 'previous_file' . $i;
@@ -497,6 +452,12 @@ class ContentManager
                         $dynamicContents = $this->getDynamicContentFromFile($this->page, $json['id']);
                         $fileName = $this->createImage($value, $dynamicContents[$i - 1]);
                         $json[$key] = [$fileName, $postValues['alt_file' . $i]];
+
+                        $fileKey = 'previous_file' . $i;
+                        $previousFile = $postValues[$fileKey];
+                        if ($previousFile) {
+                            $this->deleteImage($previousFile);
+                        }
                     } catch (Exception $e) {
                         throw new Exception($e->getMessage());
                     }
@@ -510,235 +471,58 @@ class ContentManager
         return $json;
     }
 
-
-
-    private function writeContentToFile($page, $nameOfBloc, $blocContent, $postValues, $isBloc = true)
+    private function deleteImage($fileName)
     {
-        Logger::log($page);
-        Logger::log($nameOfBloc);
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-
-        // Get the part of the JSON to update
-        $target = &$this->getTargetPartOfJson($json, $page);
-        Logger::log($target);
-
-        $blocDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
-        $blocDatas = json_decode($blocDatas, true);
-
-        // add html
-        $blocDatas['html'] = preg_replace('/\s{2,}/', ' ', $blocContent);
-
-        if ($page === 'bh-header' || $page === 'bh-footer') {
-            $blocDatas['id'] = 'bh-' . $nameOfBloc;
-        }
-
-        // Update the JSON with the new bloc information
-        $target['blocs'][] = $blocDatas;
-
-        // Update the JSON file
-        file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
+        unlink(self::IMAGES_PATH . $fileName . '.jpeg');
+        unlink(self::IMAGES_PATH . $fileName . '_s.jpeg');
+        unlink(self::IMAGES_PATH . $fileName . '_m.jpeg');
     }
 
-    private function &getTargetPartOfJson(&$json, $page)
+
+    private function writeContentToFile($page, $nameOfBloc, $blockContent, $postValues, $isBloc = true)
     {
+        $this->updateTarget($this->json, $page);
+        $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
+        $blockDatas = json_decode($blockDatas, true);
+
+        // add html
+        $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
+        if ($page === 'bh-header' || $page === 'bh-footer') {
+            $blockDatas['id'] = 'bh-' . $nameOfBloc;
+        }
+
+        // Update the JSON with the new block information
+        $this->target['blocks'][] = $blockDatas;
+
+        // Update the JSON file
+        file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+        return $blockDatas;
+    }
+
+    private function updateTarget(&$json, $page, $targetDestination = false)
+    {
+        $targetParam = $targetDestination ? 'targetDestination' : 'target';
         $pathParts = explode('/', $page);
-        $target = &$json[$pathParts[0]];
-    
+        $this->{$targetParam} = &$json[$pathParts[0]];
+
         if (count($pathParts) > 1) {
             foreach (array_slice($pathParts, 1) as $part) {
-                $target = &$target['subPages'][$part];
+                $this->{$targetParam} = &$this->{$targetParam}['subPages'][$part];
             }
         }
-        
-        return $target;
     }
 
     public function getBlocContentFromFile($page, $id, $returnHtml = true)
     {
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-
-        $blockKey = $this->getBlockIndexById($id, $target['blocs']);
-        if ($blockKey !== null) {
+        $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
+        if ($blockIndex !== null) {
             if ($returnHtml) {
-                return $target['blocs'][$blockKey]['html'];
+                return $this->target[$blockIndex]['html'];
             } else {
-                return $target['blocs'][$blockKey];
+                return $this->target[$blockIndex];
             }
         } else {
-            // find bloc inside layout
-            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
-            if ($layout !== null && $bloc !== null) {
-                if ($returnHtml) {
-                    return $target['blocs'][$layout]['blocs'][$bloc]['html'];
-                } else {
-                    return $target['blocs'][$layout]['blocs'][$bloc];
-                }
-            }
-        }
-        throw new Exception("Bloc not found");
-    }
-
-    private function getBlocContent($fileContent, $index)
-    {
-        $separatorPositions = $this->getSeparatorPositions($fileContent);
-        if ($index < 0 || $index >= count($separatorPositions)) {
-            throw new Exception("Invalid index");
-        }
-
-        // Get the content between separators at the specified index
-        $startPos = $separatorPositions[$index] + strlen('<!-- separator -->');
-        $endPos = ($index + 1 < count($separatorPositions)) ? $separatorPositions[$index + 1] : strlen($fileContent);
-        return substr($fileContent, $startPos, $endPos - $startPos);
-    }
-
-    private function getBlocContentById($fileContent, $id)
-    {
-        // Find the position of the "id" within the file content
-        $idPosition = strpos($fileContent, "\"id\":\"$id\"");
-        if ($idPosition === false) {
-            throw new Exception("Id not found");
-        }
-
-        // Find the positions of the separators
-        $separatorPositions = $this->getSeparatorPositions($fileContent);
-
-        // Find the nearest separator positions before and after the "id" position
-        $startPos = 0;
-        $endPos = strlen($fileContent);
-        foreach ($separatorPositions as $position) {
-            if ($position < $idPosition) {
-                $startPos = $position + strlen('<!-- separator -->');
-            } else {
-                $endPos = $position;
-                break;
-            }
-        }
-
-        // Use the positions to extract the content between separators
-        return substr($fileContent, $startPos, $endPos - $startPos);
-    }
-
-    private function updateContentInFileById($page, $id, $postValues)
-    {
-        $this->page = $page;
-        $json = json_decode(file_get_contents($this->jsonFilePath), true);
-        $target = &$this->getTargetPartOfJson($json, $page);
-
-        $blocKey = $this->getBlockIndexById($id, $target['blocs']);
-        if ($blocKey === null) {
-            list('layout' => $layout, 'bloc' => $bloc) = $this->getBlockIndexInsideLayout($id, $target['blocs']);
-            if ($layout !== null && $bloc !== null) {
-                $target['blocs'][$layout]['blocs'][$bloc] = $this->updateJson($target['blocs'][$layout]['blocs'][$bloc], $postValues);
-            } else {
-                throw new Exception("Id not found");
-            }
-        } else {
-            $target['blocs'][$blocKey] = $this->updateJson($target['blocs'][$blocKey], $postValues);
-        }
-
-        // Write the updated content back to the file
-        file_put_contents($this->jsonFilePath, json_encode($json, JSON_PRETTY_PRINT));
-    }
-
-    private function deleteContentFromFileById($page, $id)
-    {
-        $filePath = self::PREVIEW_PATH . $page . '/index.html';
-        $fileContent = file_get_contents($filePath);
-
-        // Find the position of the "id" within the file content
-        $idPosition = strpos($fileContent, "\"id\":\"$id\"");
-        if ($idPosition === false) {
-            throw new Exception("Id not found");
-        }
-
-        // Find the positions of the separators
-        $separatorPositions = $this->getSeparatorPositions($fileContent);
-
-        // Find the nearest separator positions before and after the "id" position
-        $startPos = 0;
-        $endPos = strlen($fileContent);
-        foreach ($separatorPositions as $position) {
-            if ($position < $idPosition) {
-                $startPos = $position;
-            } else {
-                $endPos = $position;
-                break;
-            }
-        }
-        if ($endPos === false) {
-            throw new Exception("Invalid id");
-        }
-        $content = substr_replace($fileContent, "", $startPos, $endPos - $startPos);
-
-        // Get the bloc content
-        $blocContent = substr($fileContent, $startPos, $endPos - $startPos);
-
-        // Find the images and remove
-        preg_match('/"file\d+":("([a-z\d]+)")/', $blocContent, $matches);
-        for ($i = 0; $i < count($matches); $i++) {
-            unlink(self::IMAGES_PATH . $matches[$i] . '.jpeg');
-            unlink(self::IMAGES_PATH . $matches[$i] . '_s.jpeg');
-            unlink(self::IMAGES_PATH . $matches[$i] . '_m.jpeg');
-        }
-        // Write the updated content back to the file
-        file_put_contents($filePath, $content);
-    }
-
-    private function deleteContentFromFile($page, $index)
-    {
-        $filePath = self::PREVIEW_PATH . $page . '/index.html';
-        $fileContent = file_get_contents($filePath);
-
-        $separatorPositions = $this->getSeparatorPositions($fileContent);
-
-        if ($index < 0 || $index >= count($separatorPositions)) {
-            throw new Exception("Invalid index");
-        }
-
-        // Get the start and end positions of the content to be deleted
-        $startPos = $separatorPositions[$index];
-        $endPos = ($index + 1 < count($separatorPositions)) ? $separatorPositions[$index + 1] : strlen($fileContent);
-
-        // Remove the content between the separators
-        $updatedFileContent = substr_replace($fileContent, '', $startPos, $endPos - $startPos);
-
-        // Write the updated content back to the file
-        file_put_contents($filePath, $updatedFileContent);
-    }
-
-    private function splitContentBySeparator($fileContent)
-    {
-        $separatorPositions = $this->getSeparatorPositions($fileContent);
-        $blocs = [];
-        $start = 0;
-        foreach ($separatorPositions as $position) {
-            $block = trim(substr($fileContent, $start, $position - $start));
-            if ($block !== '') {
-                $blocs[] = $block;
-            }
-            $start = $position + strlen('<!-- separator -->');
-        }
-        $lastBlock = trim(substr($fileContent, $start));
-        if ($lastBlock !== '') {
-            $blocs[] = $lastBlock;
-        }
-        return $blocs;
-    }
-
-    private function getSeparatorPositions($fileContent)
-    {
-        preg_match_all('/<!-- separator -->/', $fileContent, $matches, PREG_OFFSET_CAPTURE);
-        return array_column($matches[0], 1);
-    }
-
-    private function log($message)
-    {
-        // if message is not an array
-        if (!is_array($message)) {
-            error_log($message);
-        } else {
-            error_log(print_r($message, true));
+            throw new Exception("Bloc not found");
         }
     }
-} ?>
+}

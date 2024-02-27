@@ -24,14 +24,14 @@ if (!$page && is_dir('../previews/root')) {
     exit;
 }
 
-// list of blocs from templates folder
-$files = scandir('../templates/blocs');
-$blocsArray = [];
+// list of blocks from templates folder
+$files = scandir('../templates/blocks');
+$blocksArray = [];
 foreach ($files as $key => $value) {
     if ($value != '.' && $value != '..') {
         // key value array with key as name and value as path
         $name = explode('.', $value)[0];
-        $blocsArray[$value] = $name;
+        $blocksArray[$value] = $name;
     }
 }
 // list of layouts from templates folder

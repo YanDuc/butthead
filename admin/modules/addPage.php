@@ -1,14 +1,25 @@
 <form id="addPageForm">
-    
-    <label for="pageName"><?= _('Page Name') ?>:</label>
+
+    <label for="pageName">
+        <?= _('Title') ?>:
+    </label>
     <input type="text" id="pageName" name="pageName" minlength="5" maxlength="80" required>
-    
-    <label for="description"><?= _('Description') ?>:</label>
+
+    <label for="description">
+        <?= _('Description') ?>:
+    </label>
     <textarea id="description" name="description" minlength="5" maxlength="80" required></textarea>
-    
+
+    <label for="addToNav">
+        <?= _("Add to Navigation") ?>
+    </label>
+    <input type="checkbox" id="addToNav" name="addToNav" checked="true">
+
     <input type="hidden" name="parent" value="<?= $parent ?>">
 
-    <input type="submit" value="Add Page">
+    <div class="actions-container">
+        <input type="submit" value="Add Page">
+    </div>
 </form>
 
 <div id="response"></div>
@@ -24,7 +35,11 @@
         event.preventDefault();
 
         // Get the form data
-        const formData = new FormData(addPageForm);
+        const formData = new FormData();
+        formData.set('pageName', addPageForm.elements['pageName'].value)
+        formData.set('description', addPageForm.elements['description'].value)
+        formData.set('addToNav', addPageForm.elements['addToNav'].checked)
+        formData.set('parent', addPageForm.elements['parent'].value)
 
         try {
             const res = await getResponse('PageManager', 'add', formData);

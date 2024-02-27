@@ -4,7 +4,7 @@ class PageManager
 {
     private $jsonFilePath = __DIR__ . '/../site.json';
 
-    public function add($pageName, $description, $parent = null)
+    public function add($pageName, $description, $addToNav, $parent = null)
     {
         try {
             // Format page name to URL
@@ -50,6 +50,7 @@ class PageManager
                 $jsonData[$parent]['subPages'][$pageUrl] = [
                     'description' => $description,
                     'pageName' => $pageName,
+                    'addToNav' => $addToNav === 'true' ? true : false,
                     'order' => $newOrder
                 ];
             } else {
@@ -57,10 +58,10 @@ class PageManager
                 $jsonData[$pageUrl] = [
                     'description' => $description,
                     'pageName' => $pageName === 'root' ? 'Home' : $pageName,
+                    'addToNav' => $addToNav === 'true' ? true : false,
                     'order' => $newOrder
                 ];
             }
-            Logger::log($jsonData);
 
             file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
             return ['success' => true, 'page' => $pageUrl, 'parent' => $parent];

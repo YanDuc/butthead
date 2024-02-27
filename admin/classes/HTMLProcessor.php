@@ -22,7 +22,7 @@ class HTMLProcessor
             $contentManager = new ContentManager();
             $pageContent = $contentManager->getPageContent($path);
 
-            $blocsArray = (isset($pageContent['blocs'])) ? array_values($pageContent['blocs']) : [];
+            $blocksArray = (isset($pageContent['blocks'])) ? array_values($pageContent['blocks']) : [];
 
             // get Meta data
             $pageManager = new PageManager();
@@ -38,13 +38,13 @@ class HTMLProcessor
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
             $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer', false);
-            $blocsArray = array_merge([$header], $blocsArray, [$footer]);
+            $blocksArray = array_merge([$header], $blocksArray, [$footer]);
 
             // In your compile method
-            $blocsArray = &$this->processBlocks($blocsArray);
+            $blocksArray = &$this->processBlocks($blocksArray);
             $htmlString = '';
-            foreach ($blocsArray as $bloc) {
-                $htmlString .= $bloc['html'];
+            foreach ($blocksArray as $block) {
+                $htmlString .= $block['html'];
             }
 
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
@@ -59,13 +59,13 @@ class HTMLProcessor
 
     private function &processBlocks(&$blocks) {
         foreach ($blocks as $key => $block) {
-            $className = isset($block['bloc']) ? $block['bloc'] : $block['layout'];
+            $className = isset($block['block']) ? $block['block'] : $block['layout'];
             $blocks[$key]['html'] = $this->addClassInStyle($block['html'], $className);
             $blocks[$key]['html'] = $this->addClassInHtml($blocks[$key]['html'], $className);
             $blocks[$key] = $this->addContent($blocks[$key]); // Assuming addContent is a valid method
     
-            if (isset($block['blocs'])) {
-                $replacementContent = $this->processBlocks($blocks[$key]['blocs']); // Get the recursive result
+            if (isset($block['blocks'])) {
+                $replacementContent = $this->processBlocks($blocks[$key]['blocks']); // Get the recursive result
                 $htmlString = '';
                 foreach ($replacementContent as $layoutBlock) {
                     $htmlString .= $layoutBlock['html'];
@@ -119,46 +119,46 @@ class HTMLProcessor
         return $head . "<body>" . $html . '</body></html>';
     }
 
-    private function moveBlocksInsideLayouts($blocsArray)
+    private function moveBlocksInsideLayouts($blocksArray)
     {
-        $blocsToDelete = [];
-        foreach ($blocsArray as $key => $value) {
-            if ($value['bloc'] === 'layout' && isset($value['bloc']['blocs']) && !empty($value['bloc']['blocs'])) {
-                $pattern = '/"blocs":(\[.*?\])/';
+        $blocksToDelete = [];
+        foreach ($blocksArray as $key => $value) {
+            if ($value['block'] === 'layout' && isset($value['block']['blocks']) && !empty($value['block']['blocks'])) {
+                $pattern = '/"blocks":(\[.*?\])/';
                 if (preg_match($pattern, $value, $matches)) {
-                    $blocsIDs = json_decode($matches[1], true);
-                    foreach ($blocsIDs as $id) {
-                        $blockContent = $this->getBloc($blocsArray, $id);
+                    $blocksIDs = json_decode($matches[1], true);
+                    foreach ($blocksIDs as $id) {
+                        $blockContent = $this->getBloc($blocksArray, $id);
                         if ($blockContent) {
-                            $blocs[] = $blockContent['bloc'];
-                            $blocsToDelete[] = $blockContent['key'];
+                            $blocks[] = $blockContent['block'];
+                            $blocksToDelete[] = $blockContent['key'];
                         }
                     }
-                    if (!empty($blocs)) {
-                        $content = implode('', $blocs);
-                        $blocsArray[$key] = preg_replace('/\{\{\s*content\s*\}\}/', $content, $blocsArray[$key]);
+                    if (!empty($blocks)) {
+                        $content = implode('', $blocks);
+                        $blocksArray[$key] = preg_replace('/\{\{\s*content\s*\}\}/', $content, $blocksArray[$key]);
                     } else {
-                        $blocsArray[$key] = preg_replace('/\{\{\s*content\s*\}\}/', '', $blocsArray[$key]);
+                        $blocksArray[$key] = preg_replace('/\{\{\s*content\s*\}\}/', '', $blocksArray[$key]);
                         ;
                     }
                 }
             }
-            $blocs = [];
+            $blocks = [];
         }
-        // remove blocs
-        foreach ($blocsToDelete as $index) {
-            unset($blocsArray[$index]);
+        // remove blocks
+        foreach ($blocksToDelete as $index) {
+            unset($blocksArray[$index]);
         }
-        return $blocsArray;
+        return $blocksArray;
     }
 
     private function getBloc($blockArray, $id)
     {
         foreach ($blockArray as $key => $block) {
-            // search inside <script type="application/json">{"bloc":"test2","id":"65bce69a3cdd7","input1":"jljljkl","input2":"jkljklj","input3":"kljljl"}</script>
+            // search inside <script type="application/json">{"block":"test2","id":"65bce69a3cdd7","input1":"jljljkl","input2":"jkljklj","input3":"kljljl"}</script>
             if (str_contains($block, "\"id\":\"$id\"")) {
                 return array(
-                    "bloc" => $block,
+                    "block" => $block,
                     "key" => $key
                 );
             }
