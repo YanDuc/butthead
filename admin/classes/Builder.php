@@ -17,8 +17,9 @@ class Builder
         }
     }
 
-    public function build()
+    public function build($page = false)
     {
+        $this->flatPages = $page ? [$page] : $this->flatPages;
         if (!empty($this->flatPages)) {
             foreach ($this->flatPages as $page) {
                 $htmlProcessor = new HTMLProcessor();
@@ -37,14 +38,17 @@ class Builder
                     file_put_contents(self::BUILD_PATH . $page . '/index.html', $html);
                 }
             }
-            // remove old build folders
-            $files = $this->getAllSubdirectories(realpath(self::BUILD_PATH));
-            foreach ($files as $file) {
-                preg_match('/\/build\/(.+)/', $file, $matches);
-                $pathAfterBuild = $matches[1];
-                if (!in_array($pathAfterBuild, $this->flatPages)) {
-                    $this->removeNonFlatPagesDirectories($file, $this->flatPages);
-                    rmdir($file);
+
+            if (!$page) {
+                // remove old build folders
+                $files = $this->getAllSubdirectories(realpath(self::BUILD_PATH));
+                foreach ($files as $file) {
+                    preg_match('/\/build\/(.+)/', $file, $matches);
+                    $pathAfterBuild = $matches[1];
+                    if (!in_array($pathAfterBuild, $this->flatPages)) {
+                        $this->removeNonFlatPagesDirectories($file, $this->flatPages);
+                        rmdir($file);
+                    }
                 }
             }
         }

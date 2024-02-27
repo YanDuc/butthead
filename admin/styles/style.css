@@ -182,6 +182,7 @@ input[type="submit"]:hover {
 }
 
 /* Preview Style */
+#publish,
 #preview {
   background-color: #337ab7;
   color: #fff;

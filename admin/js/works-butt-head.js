@@ -11,6 +11,7 @@ const liBlocs = document.querySelectorAll("li.block");
 const liLayouts = document.querySelectorAll("li.layout");
 const pageContent = document.getElementById("page-content");
 const preview = document.getElementById("preview");
+const publish = document.getElementById("publish");
 
 const layoutBlocs = document.querySelectorAll(".layout-blocks");
 layoutBlocs.forEach((block) => {
@@ -44,6 +45,18 @@ async function confirmDelete(page) {
   }
 }
 window.confirmDelete = confirmDelete;
+
+publish.addEventListener("click", async (event) => {
+  event.preventDefault();
+  const form = new FormData();
+  form.append("page", page);
+  try {
+    await getResponse("Builder", "build", form);
+    location.reload();
+  } catch (error) {
+    console.error("error:", error);
+  }
+})
 
 preview.addEventListener("click", async (event) => {
   event.preventDefault();

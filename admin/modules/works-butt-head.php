@@ -95,6 +95,11 @@ $canAdd = $page !== 'root' && !$parent && $_SESSION['loggedIn']['admin'];
                     <?= _('Preview') ?>
                 </div>
             </li>
+            <li class="button-tab">
+                <div class="button-link" id="publish">
+                    <?= _('Publish') ?>
+                </div>
+            </li>
         </ul>
     </div>
 </header>
