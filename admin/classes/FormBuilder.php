@@ -79,6 +79,7 @@ class FormBuilder
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label>' : '';
         $max = $this->getMax($data);
         $min = $this->getMin($data);
+        $value = $value ? str_replace('<br>', "\n", strip_tags($value)) : '';
         $textarea = $label . '<textarea name="' . $name . '" id="' . $name . '" cols="30" rows="' . $this->textareaRows($max) . '" maxlength="' . $max . '" minlength="' . $min . '" required>' . $value . '</textarea>';
         $this->form[] = $textarea;
     }

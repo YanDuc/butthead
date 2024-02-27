@@ -396,15 +396,26 @@ class ContentManager
                 }
             } else if (str_contains($key, 'input')) {
                 $i++;
-                $json[$key] = $value;
+                $json[$key] = $this->sanitizeInput($value);
             } else if (str_contains($key, 'link')) {
                 $i++;
-                $json[$key] = [$value, $postValues['url_link' . $i]];
+                $json[$key] = [$this->sanitizeInput($value, true), $postValues['url_link' . $i]];
             }
         }
 
         // Convert the array to a JSON string
         return json_encode($json);
+    }
+
+    private function sanitizeInput($input, $removeLineBreaks = false) {
+        $trimmedInput = trim($input);
+        $escapedInput = htmlentities($trimmedInput); // Escape injections using htmlentities
+        if ($removeLineBreaks) {
+            $sanitizedInput = preg_replace('/\n/', '', $escapedInput);
+        } else {
+            $sanitizedInput = str_replace("\n", "<br>", $escapedInput);
+        }
+        return $sanitizedInput;
     }
 
     private function createImage($file, $content)
@@ -468,11 +479,11 @@ class ContentManager
             } else if (str_contains($key, 'input')) {
                 preg_match('/input(\d+)/', $key, $matches);
                 $i = (int) $matches[1];
-                $json['input' . $i] = $value;
+                $json['input' . $i] = $this->sanitizeInput($value);
             } else if (str_contains($key, 'link')) {
                 preg_match('/link(\d+)/', $key, $matches);
                 $i = (int) $matches[1];
-                $json['link' . $i] = [$value, $postValues['url_link' . $i]];
+                $json['link' . $i] = [$this->sanitizeInput($value, true), $postValues['url_link' . $i]];
             }
         }
         return $json;
