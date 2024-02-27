@@ -1,15 +1,3 @@
-<div id="modal">
-    <div id="modal-content"></div>
-    <div class="modal-footer">
-        <button id="modal-close" class="modal-button">
-            <?= _('Cancel') ?>
-        </button>
-        <button id="modal-save" class="modal-button">
-            <?= _('Confirm') ?>
-        </button>
-    </div>
-</div>
-
 <div class="left-navigation">
     <ul>
         <h3>
@@ -110,51 +98,4 @@
     }
     ?>
 </div>
-
-
-<script src="js/works-butt-head.js" type="module"></script>
-
-<script>
-    function updateURL(url) {
-        location.assign(url);
-    }
-    function addURLParams(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set(param, true);
-        window.location.search = urlParams.toString();
-    }
-    function deletePage(page) {
-        // open modal
-        const modal = document.getElementById('modal');
-        modal.style.display = 'block';
-        const modalContent = document.getElementById('modal-content');
-        modalContent.innerHTML = `Are you sure you want to delete ${page} ?`;
-        document.getElementById('modal-close').addEventListener('click', () => {
-            modal.style.display = 'none';
-        })
-        document.getElementById('modal-save').addEventListener('click', () => {
-            confirmDelete(page);
-        })
-    }
-</script>
-<style>
-    .drop-zone {
-        border: 2px dashed #ccc;
-        padding: 10px;
-        text-align: center;
-        height: 50px;
-    }
-
-    .chevron-up-icon,
-    .chevron-down-icon {
-        /* Add custom styling for the chevron icons */
-        font-size: 20px;
-        /* Adjust the size */
-        color: #555;
-        cursor: pointer;
-    }
-
-    .actions {
-        display: flex;
-    }
-</style>
+<script src="js/pageContent.js" type="module"></script>

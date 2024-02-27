@@ -333,3 +333,58 @@ input[type="submit"]:hover {
 .icon:hover {
   filter: opacity(100%);
 }
+
+.chevron-up-icon,
+.chevron-down-icon {
+    font-size: 20px;
+    color: #555;
+    cursor: pointer;
+}
+
+.actions {
+    display: flex;
+}
+
+/* Sidebar */
+.drop-zone-nav {
+  transition: height 0.3s ease;
+  height: 3px;
+  margin: 0 5px;
+  /* Add transition for height change */
+}
+
+#page-elements,
+#sortable {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+#page-elements li,
+#sortable li {
+  margin: 0 0 3px 0;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  transition: transform 0.3s ease;
+}
+
+#sortable li.subpage {
+  background-color: #fafafa;
+}
+
+#sortable li.subpage ul {
+  margin: 5px 0 0 20px;
+}
+
+#sortable li.subpage li {
+  background-color: #f5f5f5;
+  border: none;
+  padding: 5px;
+}
+
+#sortable li.dragover {
+  background-color: #f8f8f8;
+  border-color: #999;
+  transform: scale(1.05);
+}

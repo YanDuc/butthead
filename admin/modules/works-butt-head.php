@@ -1,3 +1,15 @@
+<div id="modal">
+    <div id="modal-content"></div>
+    <div class="modal-footer">
+        <button id="modal-close" class="modal-button">
+            <?= _('Cancel') ?>
+        </button>
+        <button id="modal-save" class="modal-button">
+            <?= _('Confirm') ?>
+        </button>
+    </div>
+</div>
+
 <?php
 include_once('classes/ContentManager.php');
 $contentManager = new ContentManager();
@@ -113,10 +125,32 @@ if ($_GET['edit']) {
 }
 ?>
 </div>
+<script src="js/works-butt-head.js" type="module"></script>
 <script>
     function removeURLParams(param) {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.delete(param);
         window.location.search = urlParams.toString();
+    }
+    function updateURL(url) {
+        location.assign(url);
+    }
+    function addURLParams(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(param, true);
+        window.location.search = urlParams.toString();
+    }
+    function deletePage(page) {
+        // open modal
+        const modal = document.getElementById('modal');
+        modal.style.display = 'block';
+        const modalContent = document.getElementById('modal-content');
+        modalContent.innerHTML = `Are you sure you want to delete ${page} ?`;
+        document.getElementById('modal-close').addEventListener('click', () => {
+            modal.style.display = 'none';
+        })
+        document.getElementById('modal-save').addEventListener('click', () => {
+            confirmDelete(page);
+        })
     }
 </script>

@@ -37,7 +37,7 @@ if (file_exists($jsonFilePath)) {
       <?php if (!isset($data['pageName'])) { continue; } ?>
       <?php $allowChange = $data['unauthorizedUsers'] && in_array($_SESSION['loggedIn']['email'], $data['unauthorizedUsers']) ? false : true ?>
       <div class="drop-zone-nav" id="<?= $id ?>"></div>
-      <li id="<?= $id ?>" draggable="true" ondragstart="handleDragStart(event, '<?= $id ?>')">
+      <li id="<?= $id ?>" <?php if ($id !== 'root') { ?>draggable="true" ondragstart="handleDragStart(event, '<?= $id ?>')"<?php } ?>>
         <?php if ($allowChange): ?>
           <a href="#" onclick="changePage('<?= $id ?>', null, '<?= $data['unauthorizedUsers'] ?>'); return false;">
             <?= $data['pageName']; ?>
@@ -164,9 +164,13 @@ if (file_exists($jsonFilePath)) {
   async function handleDrop(e) {
     e.preventDefault();
     const draggedPath = e.dataTransfer.getData('text/plain');
+
+    if (!draggedPath || draggedPath === 'root') {
+      return;
+    }
     const droppedOnId = e.target.id;
     const isDraggedSubPage = draggedPath.includes('/')
-    const isDroppedOnSubPage = droppedOnId.includes('/')
+    const isDroppedOnSubPage = droppedOnId.includes('/');
 
     if (isDraggedSubPage) {
       if (e.target.classList.contains('drop-zone-nav')) {
@@ -203,48 +207,3 @@ if (file_exists($jsonFilePath)) {
     dropZone.addEventListener('drop', handleDrop);
   });
 </script>
-
-<style>
-  .drop-zone-nav {
-    transition: height 0.3s ease;
-    height: 3px;
-    margin: 0 5px;
-    /* Add transition for height change */
-  }
-
-  #page-elements,
-  #sortable {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  #page-elements li,
-  #sortable li {
-    margin: 0 0 3px 0;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    transition: transform 0.3s ease;
-  }
-
-  #sortable li.subpage {
-    background-color: #fafafa;
-  }
-
-  #sortable li.subpage ul {
-    margin: 5px 0 0 20px;
-  }
-
-  #sortable li.subpage li {
-    background-color: #f5f5f5;
-    border: none;
-    padding: 5px;
-  }
-
-  #sortable li.dragover {
-    background-color: #f8f8f8;
-    border-color: #999;
-    transform: scale(1.05);
-  }
-</style>
