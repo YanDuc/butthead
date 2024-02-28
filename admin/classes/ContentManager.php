@@ -274,10 +274,13 @@ class ContentManager
     private function &updateTargetAndGetBlockIndex($page, $id, $targetDestination = false)
     {
         $this->page = $page;
+        Logger::log($page);
         $target = $targetDestination ? 'targetDestination' : 'target';
-
+        Logger::log($this->{$target});
         $this->updateTarget($this->json, $page, $targetDestination);
+        Logger::log($this->{$target}['blocks']);
         $blockIndex = $this->getBlockIndexById($id, $this->{$target}['blocks']);
+        Logger::log($blockIndex);
         if ($blockIndex !== null) {
             $this->{$target} = &$this->{$target}['blocks'];
             return $blockIndex;
@@ -294,9 +297,11 @@ class ContentManager
 
     private function getBlockIndexById($id, $contents)
     {
-        foreach ($contents as $key => $content) {
-            if (isset($content['id']) && $content['id'] === $id) {
-                return $key;
+        if (!empty($content) && is_array($contents)) {            
+            foreach ($contents as $key => $content) {
+                if (isset($content['id']) && $content['id'] === $id) {
+                    return $key;
+                }
             }
         }
         return null; // Return null if content with the specified id is not found
@@ -395,10 +400,10 @@ class ContentManager
                     throw new Exception($e->getMessage());
                 }
             } else if (str_contains($key, 'input')) {
-                $i++;
                 $json[$key] = $this->sanitizeInput($value);
             } else if (str_contains($key, 'link')) {
-                $i++;
+                preg_match('/link(\d+)/', $key, $matches);
+                $i = (int) $matches[1];
                 $json[$key] = [$this->sanitizeInput($value, true), $postValues['url_link' . $i]];
             }
         }

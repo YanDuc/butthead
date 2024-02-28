@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 require_once __DIR__ . '/Logger.php';
 include_once(__DIR__ . '/../includes/locale_setup.php');
 

@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 require_once __DIR__ . '/ContentManager.php';
 require_once __DIR__ . '/PageManager.php';
 require_once __DIR__ . '/Logger.php';
@@ -19,10 +22,7 @@ class HTMLProcessor
     {
         try {
             // get html page content
-            $contentManager = new ContentManager();
-            $pageContent = $contentManager->getPageContent($path);
-
-            $blocksArray = (isset($pageContent['blocks'])) ? array_values($pageContent['blocks']) : [];
+            $blocksArray = $this->getBlocks($path);
 
             // get Meta data
             $pageManager = new PageManager();
@@ -32,12 +32,14 @@ class HTMLProcessor
 
             // get styles
             $globalStyle = "<style>" . $this->getGlobalStyles() . "</style>";
-            // get header
-            $contentManager = new ContentManager();
-            $header = $contentManager->getBlocContentFromFile('bh-header', 'bh-header', false);
+
+            // get header            
+            $header = $this->getBlocks('bh-header');
+            Logger::log($header);
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
-            $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer', false);
+            $footer = $this->getBlocks('bh-footer');
+            Logger::log($footer);
             $blocksArray = array_merge([$header], $blocksArray, [$footer]);
 
             // In your compile method
@@ -56,6 +58,14 @@ class HTMLProcessor
             throw new Exception($e->getMessage());
         }
     }
+
+    private function getBlocks($path)
+    {
+        $contentManager = new ContentManager();
+        $pageContent = $contentManager->getPageContent($path);
+        return (isset($pageContent['blocks'])) ? array_values($pageContent['blocks']) : [];
+    }
+
 
     private function &processBlocks(&$blocks) {
         foreach ($blocks as $key => $block) {
@@ -250,6 +260,11 @@ class HTMLProcessor
     private function generateFontFaceCSS() {
         // get fonts in assets
         $directoryPath = self::ASSETS_PATH . 'fonts';
+        if (!is_dir($directoryPath)) {
+           // create
+           mkdir($directoryPath, 0777, true);
+        }
+
         $fontFormats = ['woff', 'woff2', 'ttf'];
         $fonts = '';
         foreach (new DirectoryIterator($directoryPath) as $fileInfo) {

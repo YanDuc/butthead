@@ -108,16 +108,18 @@ class FormBuilder
 
     private function createInputFile($name, $data, $value = '')
     {
+        $alt_value = !empty($value[1]) ? $value[1] : '';
+        $previous_value = !empty($value[0]) ? $value[0] : '';
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label>' : '';
         $input = "<input type='file' name='$name' id='$name'>";
-        $altInput = "<input type='text' name='alt_$name' maxlength='100' placeholder='Alternative text' id='alt_$name' value='$value[1]'>";
+        $altInput = "<input type='text' name='alt_$name' maxlength='100' placeholder='Alternative text' id='alt_$name' value='$alt_value'>";
         
         $previewSrc = !empty($value) ? "../assets/img/$value[0].jpeg" : '#';
         $previewImage = "<img src='$previewSrc' height='100' id='preview_$name'>";
         
         $this->form[] = $label . "<div style='display: flex;'><div style='width: 85%; margin-right: 10px;'>" . $input . $altInput . "</div><div style='width: 15%; text-align: center;'>" . $previewImage . "</div></div>";
         if (!empty($value)) {
-            $this->form[] = "<input type='hidden' name='previous_$name' id='previous_$name' value='$value[0]'>";
+            $this->form[] = "<input type='hidden' name='previous_$name' id='previous_$name' value='$previous_value'>";
         }
     }
 

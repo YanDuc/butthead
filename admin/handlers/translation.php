@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 include_once '../includes/locale_setup.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $text = $_POST['text'] ?? '';

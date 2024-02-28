@@ -3,6 +3,40 @@ require_once __DIR__ . '/Logger.php';
 class PageManager
 {
     private $jsonFilePath = __DIR__ . '/../site.json';
+    private $pages;
+
+    public function __construct()
+    {
+        if (file_exists($this->jsonFilePath)) {
+            $pages = json_decode(file_get_contents($this->jsonFilePath), true);
+        } else {
+            $pages = array();
+        }
+        $this->initFile();
+        uasort($pages, function ($a, $b) {
+            return $a['order'] <=> $b['order'];
+        });
+        $this->pages = $pages;
+    }
+
+    public function getPages()
+    {
+        return $this->pages;
+    }
+
+    private function initFile()
+    {
+        if (!isset($this->pages['root'])) {
+            $this->add('root', '', false);
+        }
+        if (!isset($this->pages['bh-header'])) {
+            $this->add('bh-header', '', false);
+        }
+        if (!isset($this->pages['bh-footer'])) {
+            $this->add('bh-footer', '', false);
+        }
+    }
+
 
     public function add($pageName, $description, $addToNav, $parent = null)
     {
@@ -250,15 +284,6 @@ class PageManager
         }
     }
 
-    public function getPages()
-    {
-        $jsonData = [];
-        if (file_exists($this->jsonFilePath)) {
-            $jsonData = json_decode(file_get_contents($this->jsonFilePath), true);
-        }
-        return $jsonData;
-    }
-
     public function addUnauthorizedUsers($email, $pagePath)
     {
         $pages = $this->getPages();
@@ -382,24 +407,5 @@ class PageManager
 
         file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
         return ['success' => true];
-    }
-
-    private function removeDirectory($dir)
-    {
-        if (!file_exists($dir)) {
-            return true;
-        }
-        if (!is_dir($dir)) {
-            return unlink($dir);
-        }
-        foreach (scandir($dir) as $item) {
-            if ($item == '.' || $item == '..') {
-                continue;
-            }
-            if (!$this->removeDirectory($dir . DIRECTORY_SEPARATOR . $item)) {
-                return false;
-            }
-        }
-        return rmdir($dir);
     }
 }

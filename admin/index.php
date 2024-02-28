@@ -1,5 +1,10 @@
-<?php session_start(); ?>
-<?php include_once 'includes/locale_setup.php'; ?>
+<?php
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
+    include_once 'includes/locale_setup.php';
+?>
 <!DOCTYPE html>
 <html>
 

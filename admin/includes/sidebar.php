@@ -1,28 +1,7 @@
 <?php
-$jsonFilePath = './site.json';
-
-if (file_exists($jsonFilePath)) {
-  $jsonData = json_decode(file_get_contents($jsonFilePath), true);
-
-  if (!isset($jsonData['root'])) {
-    include_once('classes/PageManager.php');
-    $pageManager = new PageManager();
-    $pageManager->add('root', '', null);
-    $jsonData['root'] = [
-      "description" => "",
-      "pageName" => "Home",
-      "order" => 0,
-      "addToNav" => false
-    ];
-  }
-
-  // Sort the data based on the "order" value in ascending order
-  uasort($jsonData, function ($a, $b) {
-    return $a['order'] <=> $b['order'];
-  });
-} else {
-  $jsonData = [];
-}
+include_once('classes/PageManager.php');
+$pageManager = new PageManager();
+$pages = $pageManager->getPages();
 ?>
 
 <aside>
@@ -33,13 +12,14 @@ if (file_exists($jsonFilePath)) {
     <?= _('Add page') ?>
   </a>
   <ul id="sortable">
-    <?php foreach ($jsonData as $id => $data): ?>
+    <?php foreach ($pages as $id => $data): ?>
       <?php if (!isset($data['pageName'])) { continue; } ?>
-      <?php $allowChange = $data['unauthorizedUsers'] && in_array($_SESSION['loggedIn']['email'], $data['unauthorizedUsers']) ? false : true ?>
+      <?php $unauthorizedUsers = !empty($data['unauthorizedUsers']) ? $data['unauthorizedUsers'] : null; ?>
+      <?php $allowChange = !empty($unauthorizedUsers) && in_array($_SESSION['loggedIn']['email'], $unauthorizedUsers) ? false : true ?>
       <div class="drop-zone-nav" id="<?= $id ?>"></div>
       <li id="<?= $id ?>" <?php if ($id !== 'root') { ?>draggable="true" ondragstart="handleDragStart(event, '<?= $id ?>')"<?php } ?>>
         <?php if ($allowChange): ?>
-          <a href="#" onclick="changePage('<?= $id ?>', null, '<?= $data['unauthorizedUsers'] ?>'); return false;">
+          <a href="#" onclick="changePage('<?= $id ?>', null, '<?= $unauthorizedUsers ?>'); return false;">
             <?= $data['pageName']; ?>
           </a>
         <?php endif; ?>
@@ -49,7 +29,7 @@ if (file_exists($jsonFilePath)) {
           </div>
         <?php endif; ?>
 
-        <?php if ($data['subPages']): ?>
+        <?php if (!empty($data['subPages'])): ?>
           <ul>
             <?php
             foreach ($data['subPages'] as $subId => $subData):
@@ -61,7 +41,7 @@ if (file_exists($jsonFilePath)) {
                 ondragstart="handleSubPageDragStart(event, '<?= $pagePath ?>')">
                 <?php if ($allowChangeSub): ?>
                   <a href="#"
-                    onclick="changePage('<?= $subId ?>', '<?= $id ?>', '<?= $data['unauthorizedUsers'] ?>'); return false;">
+                    onclick="changePage('<?= $subId ?>', '<?= $id ?>', '<?= $unauthorizedUsers ?>'); return false;">
                     <?= $subData['pageName'] ?>
                   </a>
                 <?php endif; ?>
@@ -78,7 +58,7 @@ if (file_exists($jsonFilePath)) {
           </ul>
         <?php endif ?>
       </li>
-      <?php if (end($jsonData) === $data): ?>
+      <?php if (end($pages) === $data): ?>
         <div class="drop-zone-nav"></div>
       <?php endif; ?>
     <?php endforeach; ?>
@@ -117,9 +97,9 @@ if (file_exists($jsonFilePath)) {
 <script>
   function changePage(page, parent = null, unauthorized) {
     if (parent) {
-      location.assign('/admin/?page=' + page + '&parent=' + parent);
+      location.assign('?page=' + page + '&parent=' + parent);
     } else {
-      location.assign('/admin/?page=' + page);
+      location.assign('?page=' + page);
     }
   }
 

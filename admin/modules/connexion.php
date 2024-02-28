@@ -1,4 +1,7 @@
-<?php session_start(); ?>
+<?php     if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    }  ?>
 <div class="form-container">
     <h2>
         <?= _('Login Form') ?>
