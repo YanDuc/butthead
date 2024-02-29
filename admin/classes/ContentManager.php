@@ -77,7 +77,7 @@ class ContentManager
     {
         try {
             $this->updateTarget($this->json, $page);
-            return (isset($this->target['blocks'])) ? $this->target['blocks'] : [];
+            return(isset($this->target['blocks'])) ? $this->target['blocks'] : [];
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }
@@ -250,7 +250,7 @@ class ContentManager
 
 
     public function updateContent($page, $id, ...$postValues)
-    {   
+    {
         $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
         if ($blockIndex !== null) {
             $this->target[$blockIndex] = $this->updateJson($this->target[$blockIndex], $postValues);
@@ -265,6 +265,11 @@ class ContentManager
     {
         $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id);
         if ($blockIndex !== null) {
+            foreach ($this->target[$blockIndex] as $key => $value) {
+                if (str_contains($key, 'file') && !empty($value[0])) {
+                    $this->deleteImage($value[0]);
+                }
+            }
             unset($this->target[$blockIndex]);
             file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
             return ['success' => true];
@@ -293,7 +298,7 @@ class ContentManager
 
     private function getBlockIndexById($id, $contents)
     {
-        if (!empty($contents) && is_array($contents)) {            
+        if (!empty($contents) && is_array($contents)) {
             foreach ($contents as $key => $content) {
                 if (isset($content['id']) && $content['id'] === $id) {
                     return $key;
@@ -408,7 +413,8 @@ class ContentManager
         return json_encode($json);
     }
 
-    private function sanitizeInput($input, $removeLineBreaks = false) {
+    private function sanitizeInput($input, $removeLineBreaks = false)
+    {
         $trimmedInput = trim($input);
         $escapedInput = htmlentities($trimmedInput); // Escape injections using htmlentities
         if ($removeLineBreaks) {
@@ -426,22 +432,55 @@ class ContentManager
             $maxHeight = null;
 
             // get max width and height inside content (type string like ' img | 50 | 50 ')
-            $dimensions = explode(' | ', $content);
+            $dimensions = explode('|', $content);
             $dimensions = array_map('trim', $dimensions);
-            $maxWidth = $dimensions[1];
-            $maxHeight = $dimensions[2];
+            $maxWidth = $this->extractImageWidth($dimensions);
+            $maxHeight = $this->extractImageHeight($dimensions);
+            $isResize = $this->isResize($dimensions);
 
-            $image = new Resize($file, $maxWidth, $maxHeight);
-            if ($maxWidth > HTMLConfig::BREAKPOINTS['m']) {
+            $image = new Resize($file, $maxWidth, $maxHeight, $isResize);
+            $newWidth = $image->width;
+            if ($newWidth > HTMLConfig::BREAKPOINTS['m']) {
                 $image->copyImage('_m', HTMLConfig::BREAKPOINTS['m']);
             }
-            if ($maxWidth > HTMLConfig::BREAKPOINTS['s']) {
+            if ($newWidth > HTMLConfig::BREAKPOINTS['s']) {
                 $image->copyImage('_s', HTMLConfig::BREAKPOINTS['s']);
             }
             unlink($image->destination);
             return $image->fileName;
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
+        }
+    }
+
+    private function isResize($dimensions)
+    {
+        foreach ($dimensions as $dimension) {
+            if (strtolower(trim($dimension)) === 'resize') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function extractImageWidth($dimensions)
+    {
+        foreach ($dimensions as $dimension) {
+            if (is_numeric(trim($dimension))) {
+                return trim($dimension);
+            }
+        }
+        return 0;
+    }
+
+    private function extractImageHeight($dimensions)
+    {
+        $lastTwoElements = array_slice($dimensions, -2);
+        $lastTwoElements = array_map('trim', $lastTwoElements);
+        if (is_numeric($lastTwoElements[1]) && is_numeric($lastTwoElements[0])) {
+            return trim($lastTwoElements[1]);
+        } else {
+            return 0;
         }
     }
 
@@ -504,16 +543,16 @@ class ContentManager
             $this->updateTarget($this->json, $page);
             $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
             $blockDatas = json_decode($blockDatas, true);
-    
+
             // add html
             $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
             if ($page === 'bh-header' || $page === 'bh-footer') {
                 $blockDatas['id'] = 'bh-' . $nameOfBloc;
             }
-    
+
             // Update the JSON with the new block information
             $this->target['blocks'][] = $blockDatas;
-    
+
             // Update the JSON file
             file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
             return $blockDatas;

@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/Logger.php';
 /**
  * [Resize description]
  */
@@ -68,12 +68,18 @@ class Resize
 
   public $error = '';
 
-  public function __construct($file, $width, $height)
+  public function __construct($file, $width, $height, $isResize = false)
   {
     try {
+      $this->width = (!empty($width) && (int)$width > 0) ? $width : null;
+      $this->height = (!empty($height) && (int)$height > 0) ? $height : null;
       $this->TestImage($file);
       $this->moveImage();
-      $this->newImage($width, $height);
+      if ($isResize) {
+        $this->OnlyResize($this->width, $this->height);
+      } else {
+        $this->newImage($this->width, $this->height);
+      }
     } catch (Exception $e) {
       throw new Exception($e->getMessage());
     }
@@ -102,12 +108,27 @@ class Resize
         throw new Exception("Fichier non autorisé");
       }
     }
+    list($width, $height) = getimagesize($file['tmp_name']);
+    $this->updateWidthAndHeight($width, $height);
     $this->fileName = uniqid();
     $this->extension = $extension_upload;
     $this->fileTmpName = $file['tmp_name'];
     $this->destination = $this->folderImg . '/' . $this->fileName . '.' . $this->extension;
     $this->copyDestination = $this->folderImg . '/' . $this->fileName . '.jpeg';
     $this->quality = '80';
+  }
+
+  private function updateWidthAndHeight($originalWidth, $originalHeight) {
+    if ($this->width && $this->height) {
+      return;
+    } else if ($this->width) {
+      $this->height = round($this->width * $originalHeight / $originalWidth);
+    } else if ($this->height) {
+      $this->width = round($this->height * $originalWidth / $originalHeight);
+    } else {
+      $this->width = $originalWidth;
+      $this->height = $originalHeight;
+    }
   }
 
   /**

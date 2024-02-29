@@ -59,8 +59,13 @@ class FormBuilder
     {
         // get label content (type string like ' input | "myLabel" | 50 | 50 ')
         $dimensions = explode('|', $content);
-        if (isset($dimensions[1]) && !is_numeric(trim($dimensions[1]))) {
-            return $dimensions[1];
+        $dimensions = array_map('trim', $dimensions);
+        if (isset($dimensions[1]) && !is_numeric($dimensions[1])) {
+            if (str_contains($content, 'img') && strtolower($dimensions[1]) === 'resize') {
+                return 'File';
+            } else {
+                return $dimensions[1];
+            }
         } else {
             if (str_contains($content, 'input')) {
                 return 'Input';
