@@ -5,7 +5,7 @@ class FormBuilder
 {
     private $dynamicContent;
     private $form = [];
-    public function __construct($dynamicContent, $values)
+    public function __construct($dynamicContent, $values, $insert_at = null)
     {
         $this->dynamicContent = $dynamicContent;
         foreach ($this->dynamicContent as $key => $content) {
@@ -22,9 +22,16 @@ class FormBuilder
                 $this->createLink('link' . $key + 1, $content, $value);
             }
         }
+        if ($insert_at) {
+            $this->form[] = '<input type="radio" id="topChoice" name="position" value="top" />
+            <label for="topChoice">' . _('Top') .'</label>
+            <input type="radio" id="bottomChoice" name="position" value="bottom" checked/>
+            <label for="bottomChoice">' . _("Bottom") . '</label>';
+        }
     }
 
-    public function __get($form) {
+    public function __get($form)
+    {
         return $this->form;
     }
 
@@ -89,7 +96,8 @@ class FormBuilder
         $this->form[] = $textarea;
     }
 
-    private function textareaRows($maxlength) {
+    private function textareaRows($maxlength)
+    {
         if (!$maxlength || !is_numeric($maxlength)) {
             return 5;
         }
@@ -101,7 +109,7 @@ class FormBuilder
         }
         return $rows;
     }
-    
+
     private function createInput($name, $data, $value = '')
     {
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label>' : '';
@@ -118,10 +126,10 @@ class FormBuilder
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label>' : '';
         $input = "<input type='file' name='$name' id='$name'>";
         $altInput = "<input type='text' name='alt_$name' maxlength='100' placeholder='Alternative text' id='alt_$name' value='$alt_value'>";
-        
+
         $previewSrc = !empty($value) ? "../assets/img/$value[0].jpeg" : '#';
         $previewImage = "<img src='$previewSrc' height='100' id='preview_$name'>";
-        
+
         $this->form[] = $label . "<div style='display: flex;'><div style='width: 85%; margin-right: 10px;'>" . $input . $altInput . "</div><div style='width: 15%; text-align: center;'>" . $previewImage . "</div></div>";
         if (!empty($value)) {
             $this->form[] = "<input type='hidden' name='previous_$name' id='previous_$name' value='$previous_value'>";
@@ -135,14 +143,14 @@ class FormBuilder
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label><br>' : '';
         if (isset($flatPages) && !empty($flatPages)) {
             $select = '<select name="url_' . $name . '" id="url_' . $name . '" required>';
-            $select.= '<option value="">Select Page</option>';
+            $select .= '<option value="">Select Page</option>';
             foreach ($flatPages as $page) {
                 $select .= '<option value="' . $page . '"' . ($value[1] == $page ? 'selected' : '') . '>' . $page . '</option>';
             }
             $select .= '</select>';
         }
-        
-        $input = $label . $select .'<input type="text" placeholder="Name" style="margin-top: 10px;" name="' . $name . '" id="' . $name . '" value="' . $value[0] . '" required>';
+
+        $input = $label . $select . '<input type="text" placeholder="Name" style="margin-top: 10px;" name="' . $name . '" id="' . $name . '" value="' . $value[0] . '" required>';
         $this->form[] = $input;
     }
 
@@ -156,7 +164,7 @@ class FormBuilder
         }
     }
 
-    private function inputDate($name, $data, $value = '') 
+    private function inputDate($name, $data, $value = '')
     {
         $label = $this->getLabel($data) ? '<label for="' . $name . '">' . $this->getLabel($data) . '</label>' : '';
         $this->form[] = $label . "<input type='date' name='$name' id='$name' value='$value'>";

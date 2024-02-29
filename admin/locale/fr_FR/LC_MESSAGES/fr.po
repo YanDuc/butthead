@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-02-27 12:55+0100\n"
-"PO-Revision-Date: 2024-02-27 12:56+0100\n"
+"POT-Creation-Date: 2024-02-29 15:38+0100\n"
+"PO-Revision-Date: 2024-02-29 15:39+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -13,11 +13,19 @@ msgstr ""
 "X-Poedit-Basepath: ../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: classes/UserManager.php:128 classes/UserManager.php:222
+#: classes/FormBuilder.php:27
+msgid "Top"
+msgstr "Au dessus"
+
+#: classes/FormBuilder.php:29
+msgid "Bottom"
+msgstr "En dessous"
+
+#: classes/UserManager.php:132 classes/UserManager.php:226
 msgid "Cannot remove last admin"
 msgstr "Impossible de supprimer le dernier administrateur"
 
-#: classes/UserManager.php:219
+#: classes/UserManager.php:223
 msgid "User not found"
 msgstr "Utilisateur non trouvé"
 
@@ -45,27 +53,27 @@ msgstr "Changer le mot de passe"
 msgid "Disconnect"
 msgstr "Déconnexion"
 
-#: includes/sidebar.php:30
+#: includes/sidebar.php:9
 msgid "Pages"
 msgstr "Pages"
 
-#: includes/sidebar.php:33 modules/works-butt-head.php:82
+#: includes/sidebar.php:12 modules/works-butt-head.php:94
 msgid "Add page"
 msgstr "Ajouter une page"
 
-#: includes/sidebar.php:88
+#: includes/sidebar.php:68
 msgid "Elements"
 msgstr "Éléments"
 
-#: includes/sidebar.php:92
+#: includes/sidebar.php:72
 msgid "Header"
 msgstr "Entête"
 
-#: includes/sidebar.php:95
+#: includes/sidebar.php:75
 msgid "Footer"
 msgstr "Bas de page"
 
-#: index.php:8
+#: index.php:13
 msgid "Admin Panel"
 msgstr "Administration"
 
@@ -97,53 +105,53 @@ msgstr "Confirmation mot de passe"
 msgid "Submit"
 msgstr "Valider"
 
-#: modules/connexion.php:4
+#: modules/connexion.php:7
 msgid "Login Form"
 msgstr "Connexion"
 
-#: modules/connexion.php:11
+#: modules/connexion.php:14
 msgid "Password"
 msgstr "Mot de passe"
 
-#: modules/connexion.php:16
+#: modules/connexion.php:19
 msgid "Login"
 msgstr "Connexion"
 
-#: modules/pageContent.php:5 modules/users/manageUsers.php:10
-msgid "Cancel"
-msgstr "Annuler"
-
-#: modules/pageContent.php:8 modules/users/manageUsers.php:11
-msgid "Confirm"
-msgstr "Confirmer"
-
-#: modules/pageContent.php:16
+#: modules/pageContent.php:4
 msgid "Blocs"
 msgstr "Blocs"
 
-#: modules/pageContent.php:24
+#: modules/pageContent.php:12
 msgid "Layouts"
 msgstr "Disposition"
 
-#: modules/pageContent.php:60
+#: modules/pageContent.php:48
 msgid "Add block"
 msgstr "Ajouter un bloc"
 
-#: modules/pageContent.php:75
+#: modules/pageContent.php:63
 msgid "Get out of layout"
 msgstr "Sortir"
 
-#: modules/pageContent.php:77 modules/users/manageUsers.php:40
+#: modules/pageContent.php:65 modules/users/manageUsers.php:40
 msgid "Delete"
 msgstr "Supprimer"
 
-#: modules/pageContent.php:78
+#: modules/pageContent.php:66
 msgid "Update"
 msgstr "Modifier"
 
 #: modules/pageMeta.php:39
 msgid "Edit Page"
 msgstr "Modifier la page"
+
+#: modules/users/manageUsers.php:10 modules/works-butt-head.php:5
+msgid "Cancel"
+msgstr "Annuler"
+
+#: modules/users/manageUsers.php:11 modules/works-butt-head.php:8
+msgid "Confirm"
+msgstr "Confirmer"
 
 #: modules/users/manageUsers.php:14
 msgid "Add user"
@@ -173,23 +181,23 @@ msgstr "Permissions"
 msgid "Permissions"
 msgstr "Permissions"
 
-#: modules/works-butt-head.php:68
+#: modules/works-butt-head.php:80
 msgid "Content"
 msgstr "Contenu"
 
-#: modules/works-butt-head.php:74
+#: modules/works-butt-head.php:86
 msgid "SEO"
 msgstr "SEO"
 
-#: modules/works-butt-head.php:89
+#: modules/works-butt-head.php:101
 msgid "Delete page"
 msgstr "Supprimer une page"
 
-#: modules/works-butt-head.php:95
+#: modules/works-butt-head.php:107
 msgid "Preview"
 msgstr "Prévisualiser"
 
-#: modules/works-butt-head.php:100
+#: modules/works-butt-head.php:112
 msgid "Publish"
 msgstr "Publier"
 

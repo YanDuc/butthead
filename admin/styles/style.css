@@ -388,3 +388,43 @@ input[type="submit"]:hover {
   border-color: #999;
   transform: scale(1.05);
 }
+
+/* Hide the default radio button */
+input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Style the radio button label */
+input[type="radio"] + label {
+  position: relative;
+  padding-left: 30px; /* Adjust as needed */
+  cursor: pointer;
+  padding-top: 2px;
+}
+
+/* Style the radio button indicator */
+input[type="radio"] + label:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px; /* Adjust as needed */
+  width: 16px; /* Adjust as needed */
+  height: 16px; /* Adjust as needed */
+  border: 2px solid #ccc;
+  border-radius: 50%;
+}
+
+/* Style the radio button indicator when checked */
+input[type="radio"]:checked + label:before {
+  background-color: #337ab7; /* Adjust as needed */
+}
+
+/* Optional: Style the radio button label text */
+input[type="radio"] + label:after {
+  content: ' ';
+  display: block;
+  margin-top: 2px; /* Adjust as needed */
+}

@@ -88,7 +88,7 @@ class ContentManager
         try {
             if (isset($postValues['block'])) {
                 $dynamicContents = $this->getDynamicContent($postValues['block']);
-                $formBuilder = new FormBuilder($dynamicContents, null);
+                $formBuilder = new FormBuilder($dynamicContents, null, true);
             } else if ($postValues['page'] && $postValues['id']) {
                 $blockIndex = $this->updateTargetAndGetBlockIndex($postValues['page'], $postValues['id']);
                 if ($blockIndex !== null) {
@@ -539,6 +539,7 @@ class ContentManager
 
     private function writeContentToFile($page, $nameOfBloc, $blockContent, $postValues, $isBloc = true)
     {
+        Logger::log($postValues);
         try {
             $this->updateTarget($this->json, $page);
             $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
@@ -551,7 +552,14 @@ class ContentManager
             }
 
             // Update the JSON with the new block information
-            $this->target['blocks'][] = $blockDatas;
+            if (!isset($postValues['position']) || $postValues['position'] === 'bottom') {
+                $this->target['blocks'][] = $blockDatas;
+            } else {
+                if (!isset($this->target['blocks'])) {
+                    $this->target['blocks'] = [];
+                }
+                array_unshift($this->target['blocks'], $blockDatas);                
+            }
 
             // Update the JSON file
             file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
