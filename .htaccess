@@ -1,17 +1,15 @@
 RewriteEngine On
 
 # Specific handling for the /admin URL
-RewriteRule ^admin($|/) - [L]
+RewriteRule ^admin$ - [L]
 
 # Exclude existing files and directories from the following RewriteRules
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# If the project is in the root directory
+# RewriteRule for all URLs except those starting with /build/
+RewriteCond %{REQUEST_URI} !^/build/ [NC]
 RewriteRule ^(.+)$ /build/$1/index.html [L]
-
-# If the project is inside a folder
-RewriteRule ^([^/]+)/(.+)$ /$1/build/$2/index.html [L]
 
 # Add a rule for serving build/index.html when no subfolder is specified
 RewriteRule ^$ /build/index.html [L]

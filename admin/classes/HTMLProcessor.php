@@ -34,12 +34,13 @@ class HTMLProcessor
             $globalStyle = "<style>" . $this->getGlobalStyles() . "</style>";
 
             // get header            
-            $header = $this->getBlocks('bh-header');
-            Logger::log($header);
+            $headerArray = $this->getBlocks('bh-header');
+            $header = $headerArray[0];
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
-            $footer = $this->getBlocks('bh-footer');
-            Logger::log($footer);
+            $footerArray = $this->getBlocks('bh-footer');
+            $footer = $footerArray[0];
+
             $blocksArray = array_merge([$header], $blocksArray, [$footer]);
 
             // In your compile method
@@ -48,7 +49,6 @@ class HTMLProcessor
             foreach ($blocksArray as $block) {
                 $htmlString .= $block['html'];
             }
-
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
             $head = $this->getHead($title, $description, $style);
             $this->html = $this->formatAndMinimizeHtml($htmlString, $head);
@@ -69,12 +69,15 @@ class HTMLProcessor
 
     private function &processBlocks(&$blocks) {
         foreach ($blocks as $key => $block) {
+            if (empty($block)) {
+                continue;
+            }
             $className = isset($block['block']) ? $block['block'] : $block['layout'];
             $blocks[$key]['html'] = $this->addClassInStyle($block['html'], $className);
             $blocks[$key]['html'] = $this->addClassInHtml($blocks[$key]['html'], $className);
             $blocks[$key] = $this->addContent($blocks[$key]); // Assuming addContent is a valid method
-    
             if (isset($block['blocks'])) {
+
                 $replacementContent = $this->processBlocks($blocks[$key]['blocks']); // Get the recursive result
                 $htmlString = '';
                 foreach ($replacementContent as $layoutBlock) {
@@ -414,25 +417,34 @@ class HTMLProcessor
 
     private function extractBlocStyles($html)
     {
-        $style = '';
-        $stylePattern = '/<style\b[^>]*>(.*?)<\/style>/s';
-        preg_match_all($stylePattern, $html, $styleMatch);
-        if (isset($styleMatch[1])) {
-            // Remove duplicates
-            $styleMatch[1] = $this->removeDuplicateStyles($styleMatch[1]);
-            $style = implode(' ', $styleMatch[1]);
+        try {
+            $style = '';
+            $stylePattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+            preg_match_all($stylePattern, $html, $styleMatch);
+            if (isset($styleMatch[1])) {
+                // Remove duplicates
+                $styleMatch[1] = $this->removeDuplicateStyles($styleMatch[1]);
+                $style = implode(' ', $styleMatch[1]);
+            }
+            $style = preg_replace('/\s{2,}/', ' ', $style);
+            return $style;
+        } catch (\Exception $e) {
+            Logger::log("Error while extracting bloc styles: " . $e->getMessage());
+            throw new Exception("Error while extracting bloc styles: " . $e->getMessage());
         }
-        $style = preg_replace('/\s{2,}/', ' ', $style);
-        return $style;
     }
 
     private function removeDuplicateStyles($styles)
     {
-        $normalizedStyles = array_map(function ($style) {
-            return preg_replace('/\s+/', ' ', trim($style));
-        }, $styles);
-        $uniqueStyles = array_unique($normalizedStyles);
-        return array_values($uniqueStyles);
+        try {
+            $normalizedStyles = array_map(function ($style) {
+                return preg_replace('/\s+/', ' ', trim($style));
+            }, $styles);
+            $uniqueStyles = array_unique($normalizedStyles);
+            return array_values($uniqueStyles);
+        } catch (\Exception $e) {
+            Logger::log("Error while removing duplicate styles: " . $e->getMessage());
+        }
     }
 
     private function preventClassStartingByNumber($className)

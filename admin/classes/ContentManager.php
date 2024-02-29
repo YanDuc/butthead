@@ -274,13 +274,9 @@ class ContentManager
     private function &updateTargetAndGetBlockIndex($page, $id, $targetDestination = false)
     {
         $this->page = $page;
-        Logger::log($page);
         $target = $targetDestination ? 'targetDestination' : 'target';
-        Logger::log($this->{$target});
         $this->updateTarget($this->json, $page, $targetDestination);
-        Logger::log($this->{$target}['blocks']);
         $blockIndex = $this->getBlockIndexById($id, $this->{$target}['blocks']);
-        Logger::log($blockIndex);
         if ($blockIndex !== null) {
             $this->{$target} = &$this->{$target}['blocks'];
             return $blockIndex;
@@ -297,7 +293,7 @@ class ContentManager
 
     private function getBlockIndexById($id, $contents)
     {
-        if (!empty($content) && is_array($contents)) {            
+        if (!empty($contents) && is_array($contents)) {            
             foreach ($contents as $key => $content) {
                 if (isset($content['id']) && $content['id'] === $id) {
                     return $key;
@@ -504,22 +500,26 @@ class ContentManager
 
     private function writeContentToFile($page, $nameOfBloc, $blockContent, $postValues, $isBloc = true)
     {
-        $this->updateTarget($this->json, $page);
-        $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
-        $blockDatas = json_decode($blockDatas, true);
-
-        // add html
-        $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
-        if ($page === 'bh-header' || $page === 'bh-footer') {
-            $blockDatas['id'] = 'bh-' . $nameOfBloc;
+        try {
+            $this->updateTarget($this->json, $page);
+            $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
+            $blockDatas = json_decode($blockDatas, true);
+    
+            // add html
+            $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
+            if ($page === 'bh-header' || $page === 'bh-footer') {
+                $blockDatas['id'] = 'bh-' . $nameOfBloc;
+            }
+    
+            // Update the JSON with the new block information
+            $this->target['blocks'][] = $blockDatas;
+    
+            // Update the JSON file
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+            return $blockDatas;
+        } catch (Exception $e) {
+            Logger::log($e->getMessage());
         }
-
-        // Update the JSON with the new block information
-        $this->target['blocks'][] = $blockDatas;
-
-        // Update the JSON file
-        file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
-        return $blockDatas;
     }
 
     private function updateTarget(&$json, $page, $targetDestination = false)

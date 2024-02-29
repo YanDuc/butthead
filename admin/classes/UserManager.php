@@ -26,6 +26,7 @@ class UserManager
             // create folder
             mkdir(dirname($this->usersJsonFilePath), 0777, true);
             $this->addDefaultUser();
+            $this->usersArray = json_decode(file_get_contents($this->usersJsonFilePath), true);
         }
     }
 

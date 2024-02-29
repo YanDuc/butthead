@@ -38,8 +38,8 @@
       <?php include 'includes/sidebar.php'; ?>
       <main>
         <?php
-        $page = $_GET['page'] ?? '';
-        $parent = $_GET['parent'] ?? null;
+        $page = !empty($_GET['page']) ? $_GET['page'] : '';
+        $parent = !empty($_GET['parent']) ? $_GET['parent'] : null;
         switch ($page) {
           case 'parameters':
             if ($isAdmin) {

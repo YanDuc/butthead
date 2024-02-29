@@ -7,36 +7,31 @@ class PageManager
 
     public function __construct()
     {
-        if (file_exists($this->jsonFilePath)) {
-            $pages = json_decode(file_get_contents($this->jsonFilePath), true);
-        } else {
-            $pages = array();
-        }
-        $this->initFile();
+        $pages = $this->initFile();
         uasort($pages, function ($a, $b) {
             return $a['order'] <=> $b['order'];
         });
         $this->pages = $pages;
     }
 
-    public function getPages()
-    {
-        return $this->pages;
-    }
-
     private function initFile()
     {
-        if (!isset($this->pages['root'])) {
-            $this->add('root', '', false);
+        $jsonData = [];
+        if (file_exists($this->jsonFilePath)) {
+            $jsonData = json_decode(file_get_contents($this->jsonFilePath), true);
         }
-        if (!isset($this->pages['bh-header'])) {
-            $this->add('bh-header', '', false);
-        }
-        if (!isset($this->pages['bh-footer'])) {
-            $this->add('bh-footer', '', false);
-        }
-    }
 
+        $requiredPages = ['root', 'bh-header', 'bh-footer'];
+        $missingPages = array_diff($requiredPages, array_keys($jsonData));
+        if (!empty($missingPages)) {
+            foreach ($missingPages as $pageName) {
+                $this->add($pageName, '', false);
+            }
+            return json_decode(file_get_contents($this->jsonFilePath), true);
+        }
+
+        return $jsonData;
+    }
 
     public function add($pageName, $description, $addToNav, $parent = null)
     {
@@ -96,7 +91,6 @@ class PageManager
                     'order' => $newOrder
                 ];
             }
-
             file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
             return ['success' => true, 'page' => $pageUrl, 'parent' => $parent];
         } catch (Exception $e) {
@@ -104,6 +98,10 @@ class PageManager
             // throw an exception with the error message
             throw new Exception($e->getMessage());
         }
+    }
+    public function getPages()
+    {
+        return $this->pages;
     }
 
     public function changeOrder($pagePath, $belowPagePath)
