@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 class Parameters
 {
     // private $usersJsonFilePath = __DIR__ . '../../../../private/users.json';

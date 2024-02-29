@@ -75,13 +75,13 @@ $canAdd = $page !== 'root' && !$parent && $_SESSION['loggedIn']['admin'];
     <div class="tabs">
         <ul class="tab-container">
             <li class="tab">
-                <a href="#" class="tab-link <?= $_GET['edit'] ? '' : 'active' ?>"
+                <a href="#" class="tab-link <?= !empty($_GET['edit']) ? '' : 'active' ?>"
                     onclick="removeURLParams('edit'); return false;">
                     <?= _('Content') ?>
                 </a>
             </li>
             <li class="tab">
-                <a href="#" class="tab-link <?= $_GET['edit'] ? 'active' : '' ?>"
+                <a href="#" class="tab-link <?= !empty($_GET['edit']) ? 'active' : '' ?>"
                     onclick="addURLParams('edit'); return false;">
                     <?= _('SEO') ?>
                 </a>
@@ -118,7 +118,7 @@ $canAdd = $page !== 'root' && !$parent && $_SESSION['loggedIn']['admin'];
 
 <div class="page-container">
 <?php
-if ($_GET['edit']) {
+if (!empty($_GET['edit'])) {
     include 'modules/pageMeta.php';
 } else {
     include 'modules/pageContent.php';

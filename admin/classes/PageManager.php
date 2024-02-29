@@ -3,6 +3,35 @@ require_once __DIR__ . '/Logger.php';
 class PageManager
 {
     private $jsonFilePath = __DIR__ . '/../site.json';
+    private $pages;
+
+    public function __construct()
+    {
+        $pages = $this->initFile();
+        uasort($pages, function ($a, $b) {
+            return $a['order'] <=> $b['order'];
+        });
+        $this->pages = $pages;
+    }
+
+    private function initFile()
+    {
+        $jsonData = [];
+        if (file_exists($this->jsonFilePath)) {
+            $jsonData = json_decode(file_get_contents($this->jsonFilePath), true);
+        }
+
+        $requiredPages = ['root', 'bh-header', 'bh-footer'];
+        $missingPages = array_diff($requiredPages, array_keys($jsonData));
+        if (!empty($missingPages)) {
+            foreach ($missingPages as $pageName) {
+                $this->add($pageName, '', false);
+            }
+            return json_decode(file_get_contents($this->jsonFilePath), true);
+        }
+
+        return $jsonData;
+    }
 
     public function add($pageName, $description, $addToNav, $parent = null)
     {
@@ -62,7 +91,6 @@ class PageManager
                     'order' => $newOrder
                 ];
             }
-
             file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
             return ['success' => true, 'page' => $pageUrl, 'parent' => $parent];
         } catch (Exception $e) {
@@ -70,6 +98,10 @@ class PageManager
             // throw an exception with the error message
             throw new Exception($e->getMessage());
         }
+    }
+    public function getPages()
+    {
+        return $this->pages;
     }
 
     public function changeOrder($pagePath, $belowPagePath)
@@ -250,15 +282,6 @@ class PageManager
         }
     }
 
-    public function getPages()
-    {
-        $jsonData = [];
-        if (file_exists($this->jsonFilePath)) {
-            $jsonData = json_decode(file_get_contents($this->jsonFilePath), true);
-        }
-        return $jsonData;
-    }
-
     public function addUnauthorizedUsers($email, $pagePath)
     {
         $pages = $this->getPages();
@@ -382,24 +405,5 @@ class PageManager
 
         file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
         return ['success' => true];
-    }
-
-    private function removeDirectory($dir)
-    {
-        if (!file_exists($dir)) {
-            return true;
-        }
-        if (!is_dir($dir)) {
-            return unlink($dir);
-        }
-        foreach (scandir($dir) as $item) {
-            if ($item == '.' || $item == '..') {
-                continue;
-            }
-            if (!$this->removeDirectory($dir . DIRECTORY_SEPARATOR . $item)) {
-                return false;
-            }
-        }
-        return rmdir($dir);
     }
 }

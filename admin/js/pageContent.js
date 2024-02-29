@@ -151,7 +151,7 @@ liBlocs.forEach((li) => {
     event.preventDefault();
     const block = event.currentTarget.id;
     try {
-      await createBlock(block);
+      const blockCreated = await createBlock(block);
       location.reload();
     } catch (error) {
       console.error("error:", error);

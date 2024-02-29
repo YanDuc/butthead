@@ -26,11 +26,15 @@ class Builder
     {
         $this->flatPages = $page ? [$page] : $this->flatPages;
         if (!empty($this->flatPages)) {
+            if (!file_exists(self::BUILD_PATH)) {
+                mkdir(self::BUILD_PATH, 0777, true);
+            }
             foreach ($this->flatPages as $page) {
                 $htmlProcessor = new HTMLProcessor();
                 $html = $htmlProcessor->compile($page);
-
-                if ($page === 'root') {
+                if (str_starts_with($page, 'bh-')) {
+                    continue;
+                } else if ($page === 'root') {
                     file_put_contents(self::BUILD_PATH . 'index.html', $html);
                 } else if (!is_dir(self::BUILD_PATH . $page)) {
                     mkdir(self::BUILD_PATH . $page, 0777, true);

@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 require_once __DIR__ . '/ContentManager.php';
 require_once __DIR__ . '/PageManager.php';
 require_once __DIR__ . '/Logger.php';
@@ -19,10 +22,7 @@ class HTMLProcessor
     {
         try {
             // get html page content
-            $contentManager = new ContentManager();
-            $pageContent = $contentManager->getPageContent($path);
-
-            $blocksArray = (isset($pageContent['blocks'])) ? array_values($pageContent['blocks']) : [];
+            $blocksArray = $this->getBlocks($path);
 
             // get Meta data
             $pageManager = new PageManager();
@@ -32,12 +32,15 @@ class HTMLProcessor
 
             // get styles
             $globalStyle = "<style>" . $this->getGlobalStyles() . "</style>";
-            // get header
-            $contentManager = new ContentManager();
-            $header = $contentManager->getBlocContentFromFile('bh-header', 'bh-header', false);
+
+            // get header            
+            $headerArray = $this->getBlocks('bh-header');
+            $header = $headerArray[0];
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
-            $footer = $contentManager->getBlocContentFromFile('bh-footer', 'bh-footer', false);
+            $footerArray = $this->getBlocks('bh-footer');
+            $footer = $footerArray[0];
+
             $blocksArray = array_merge([$header], $blocksArray, [$footer]);
 
             // In your compile method
@@ -46,7 +49,6 @@ class HTMLProcessor
             foreach ($blocksArray as $block) {
                 $htmlString .= $block['html'];
             }
-
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
             $head = $this->getHead($title, $description, $style);
             $this->html = $this->formatAndMinimizeHtml($htmlString, $head);
@@ -57,14 +59,25 @@ class HTMLProcessor
         }
     }
 
+    private function getBlocks($path)
+    {
+        $contentManager = new ContentManager();
+        $pageContent = $contentManager->getPageContent($path);
+        return (isset($pageContent['blocks'])) ? array_values($pageContent['blocks']) : [];
+    }
+
+
     private function &processBlocks(&$blocks) {
         foreach ($blocks as $key => $block) {
+            if (empty($block)) {
+                continue;
+            }
             $className = isset($block['block']) ? $block['block'] : $block['layout'];
             $blocks[$key]['html'] = $this->addClassInStyle($block['html'], $className);
             $blocks[$key]['html'] = $this->addClassInHtml($blocks[$key]['html'], $className);
             $blocks[$key] = $this->addContent($blocks[$key]); // Assuming addContent is a valid method
-    
             if (isset($block['blocks'])) {
+
                 $replacementContent = $this->processBlocks($blocks[$key]['blocks']); // Get the recursive result
                 $htmlString = '';
                 foreach ($replacementContent as $layoutBlock) {
@@ -250,6 +263,11 @@ class HTMLProcessor
     private function generateFontFaceCSS() {
         // get fonts in assets
         $directoryPath = self::ASSETS_PATH . 'fonts';
+        if (!is_dir($directoryPath)) {
+           // create
+           mkdir($directoryPath, 0777, true);
+        }
+
         $fontFormats = ['woff', 'woff2', 'ttf'];
         $fonts = '';
         foreach (new DirectoryIterator($directoryPath) as $fileInfo) {
@@ -399,25 +417,34 @@ class HTMLProcessor
 
     private function extractBlocStyles($html)
     {
-        $style = '';
-        $stylePattern = '/<style\b[^>]*>(.*?)<\/style>/s';
-        preg_match_all($stylePattern, $html, $styleMatch);
-        if (isset($styleMatch[1])) {
-            // Remove duplicates
-            $styleMatch[1] = $this->removeDuplicateStyles($styleMatch[1]);
-            $style = implode(' ', $styleMatch[1]);
+        try {
+            $style = '';
+            $stylePattern = '/<style\b[^>]*>(.*?)<\/style>/s';
+            preg_match_all($stylePattern, $html, $styleMatch);
+            if (isset($styleMatch[1])) {
+                // Remove duplicates
+                $styleMatch[1] = $this->removeDuplicateStyles($styleMatch[1]);
+                $style = implode(' ', $styleMatch[1]);
+            }
+            $style = preg_replace('/\s{2,}/', ' ', $style);
+            return $style;
+        } catch (\Exception $e) {
+            Logger::log("Error while extracting bloc styles: " . $e->getMessage());
+            throw new Exception("Error while extracting bloc styles: " . $e->getMessage());
         }
-        $style = preg_replace('/\s{2,}/', ' ', $style);
-        return $style;
     }
 
     private function removeDuplicateStyles($styles)
     {
-        $normalizedStyles = array_map(function ($style) {
-            return preg_replace('/\s+/', ' ', trim($style));
-        }, $styles);
-        $uniqueStyles = array_unique($normalizedStyles);
-        return array_values($uniqueStyles);
+        try {
+            $normalizedStyles = array_map(function ($style) {
+                return preg_replace('/\s+/', ' ', trim($style));
+            }, $styles);
+            $uniqueStyles = array_unique($normalizedStyles);
+            return array_values($uniqueStyles);
+        } catch (\Exception $e) {
+            Logger::log("Error while removing duplicate styles: " . $e->getMessage());
+        }
     }
 
     private function preventClassStartingByNumber($className)

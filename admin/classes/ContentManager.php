@@ -275,7 +275,6 @@ class ContentManager
     {
         $this->page = $page;
         $target = $targetDestination ? 'targetDestination' : 'target';
-
         $this->updateTarget($this->json, $page, $targetDestination);
         $blockIndex = $this->getBlockIndexById($id, $this->{$target}['blocks']);
         if ($blockIndex !== null) {
@@ -294,9 +293,11 @@ class ContentManager
 
     private function getBlockIndexById($id, $contents)
     {
-        foreach ($contents as $key => $content) {
-            if (isset($content['id']) && $content['id'] === $id) {
-                return $key;
+        if (!empty($contents) && is_array($contents)) {            
+            foreach ($contents as $key => $content) {
+                if (isset($content['id']) && $content['id'] === $id) {
+                    return $key;
+                }
             }
         }
         return null; // Return null if content with the specified id is not found
@@ -395,10 +396,10 @@ class ContentManager
                     throw new Exception($e->getMessage());
                 }
             } else if (str_contains($key, 'input')) {
-                $i++;
                 $json[$key] = $this->sanitizeInput($value);
             } else if (str_contains($key, 'link')) {
-                $i++;
+                preg_match('/link(\d+)/', $key, $matches);
+                $i = (int) $matches[1];
                 $json[$key] = [$this->sanitizeInput($value, true), $postValues['url_link' . $i]];
             }
         }
@@ -499,22 +500,26 @@ class ContentManager
 
     private function writeContentToFile($page, $nameOfBloc, $blockContent, $postValues, $isBloc = true)
     {
-        $this->updateTarget($this->json, $page);
-        $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
-        $blockDatas = json_decode($blockDatas, true);
-
-        // add html
-        $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
-        if ($page === 'bh-header' || $page === 'bh-footer') {
-            $blockDatas['id'] = 'bh-' . $nameOfBloc;
+        try {
+            $this->updateTarget($this->json, $page);
+            $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
+            $blockDatas = json_decode($blockDatas, true);
+    
+            // add html
+            $blockDatas['html'] = preg_replace('/\s{2,}/', ' ', $blockContent);
+            if ($page === 'bh-header' || $page === 'bh-footer') {
+                $blockDatas['id'] = 'bh-' . $nameOfBloc;
+            }
+    
+            // Update the JSON with the new block information
+            $this->target['blocks'][] = $blockDatas;
+    
+            // Update the JSON file
+            file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+            return $blockDatas;
+        } catch (Exception $e) {
+            Logger::log($e->getMessage());
         }
-
-        // Update the JSON with the new block information
-        $this->target['blocks'][] = $blockDatas;
-
-        // Update the JSON file
-        file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
-        return $blockDatas;
     }
 
     private function updateTarget(&$json, $page, $targetDestination = false)

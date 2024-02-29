@@ -1,5 +1,10 @@
-<?php session_start(); ?>
-<?php include_once 'includes/locale_setup.php'; ?>
+<?php
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
+    include_once 'includes/locale_setup.php';
+?>
 <!DOCTYPE html>
 <html>
 
@@ -33,8 +38,8 @@
       <?php include 'includes/sidebar.php'; ?>
       <main>
         <?php
-        $page = $_GET['page'] ?? '';
-        $parent = $_GET['parent'] ?? null;
+        $page = !empty($_GET['page']) ? $_GET['page'] : '';
+        $parent = !empty($_GET['parent']) ? $_GET['parent'] : null;
         switch ($page) {
           case 'parameters':
             if ($isAdmin) {

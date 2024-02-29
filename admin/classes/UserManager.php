@@ -1,5 +1,8 @@
 <?php
-session_start();
+    if(!isset($_SESSION)) 
+    { 
+        session_start(); 
+    } 
 require_once __DIR__ . '/Logger.php';
 include_once(__DIR__ . '/../includes/locale_setup.php');
 
@@ -23,6 +26,7 @@ class UserManager
             // create folder
             mkdir(dirname($this->usersJsonFilePath), 0777, true);
             $this->addDefaultUser();
+            $this->usersArray = json_decode(file_get_contents($this->usersJsonFilePath), true);
         }
     }
 
