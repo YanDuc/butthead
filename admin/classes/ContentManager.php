@@ -40,6 +40,29 @@ class ContentManager
         }
     }
 
+    public function copy($page, $id)
+    {
+        try {
+            $blockIndex = $this->updateTargetAndGetBlockIndex($page, $id); 
+            if ($blockIndex !== null) {
+                $block = $this->target[$blockIndex];
+                foreach ($block as $key => $value) {
+                    if ($key === 'id') {
+                        $block[$key] = uniqid();
+                    }
+                    if ($key === 'blocks' && !empty($value)) {
+                        foreach ($value as $k => $v) {
+                            $block[$key][$k]['id'] = uniqid();
+                        }
+                    }
+                }
+                array_splice($this->target, $blockIndex, 0, [$block]);
+                file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
+            }
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
 
 
     public function createHeader(...$postValues)
@@ -271,6 +294,7 @@ class ContentManager
                 }
             }
             unset($this->target[$blockIndex]);
+            $this->target = array_values($this->target);
             file_put_contents($this->jsonFilePath, json_encode($this->json, JSON_PRETTY_PRINT));
             return ['success' => true];
         }

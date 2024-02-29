@@ -63,6 +63,7 @@
             $html .= "<button class=\"keep-out-button\" id=" . $contentArray['id'] . " data-layout-id=" . $layoutID . ">" . _('Get out of layout') . "</button>";
         }
         $html .= "<button class=\"delete-button\" id=" . $contentArray['id'] . ">" . _('Delete') . "</button>";
+        $html .= "<button class=\"copy-button\" id=" . $contentArray['id'] . ">" . _('Copy') . "</button>";
         $html .= "<button class=\"update-button\" id=" . $contentArray['id'] . ">" . _('Update') . "</button>";
         $html .= "</div>";
         $html .= "</header>";

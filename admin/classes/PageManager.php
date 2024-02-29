@@ -406,4 +406,31 @@ class PageManager
         file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
         return ['success' => true];
     }
+
+    public function copyPage($pagePath)
+    {
+        $parent = null;
+        if (str_contains($pagePath, '/')) {
+            $parent = explode('/', $pagePath)[0];
+        }
+        $pages = $this->getPages();
+        foreach ($pages as $key => &$page) {
+            if (!$parent && $key == $pagePath) {
+                // add page-copy to pages
+                $newPageKey = $key . '-copy'; // New key for the copied page
+                $pages[$newPageKey] = $page; // Add the copied page to the $pages array with the new key
+                break;
+            } else {
+                $subPageName = explode('/', $pagePath)[1];
+                if ($key == $parent && isset($page['subPages'][$subPageName])) {
+                    $newPageKey = $subPageName . '-copy'; // New key for the copied page
+                    $page['subPages'][$newPageKey] = $page['subPages'][$subPageName];
+                    break;
+                }
+            }
+        }
+
+        file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
+        return ['success' => true];
+    }
 }

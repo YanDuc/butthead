@@ -20,12 +20,12 @@ $pages = $pageManager->getPages();
       <li id="<?= $id ?>" <?php if ($id !== 'root') { ?>draggable="true" ondragstart="handleDragStart(event, '<?= $id ?>')"<?php } ?>>
         <?php if ($allowChange): ?>
           <a href="#" onclick="changePage('<?= $id ?>', null, '<?= $unauthorizedUsers ?>'); return false;">
-            <?= $data['pageName']; ?>
+            <?= $id; ?>
           </a>
         <?php endif; ?>
         <?php if (!$allowChange): ?>
           <div class="disabled">
-            <?= $data['pageName']; ?>
+            <?= $id; ?>
           </div>
         <?php endif; ?>
 
@@ -42,12 +42,12 @@ $pages = $pageManager->getPages();
                 <?php if ($allowChangeSub): ?>
                   <a href="#"
                     onclick="changePage('<?= $subId ?>', '<?= $id ?>', '<?= $unauthorizedUsers ?>'); return false;">
-                    <?= $subData['pageName'] ?>
+                    <?= $subId; ?>
                   </a>
                 <?php endif; ?>
                 <?php if (!$allowChangeSub): ?>
                   <div class="disabled">
-                    <?= $subData['pageName']; ?>
+                    <?= $subId; ?>
                   </div>
                 <?php endif; ?>
               </li>

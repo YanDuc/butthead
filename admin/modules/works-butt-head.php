@@ -63,6 +63,7 @@ try {
 }
 $canDelete = $page !== 'root' && $_SESSION['loggedIn']['admin'];
 $canAdd = $page !== 'root' && !$parent && $_SESSION['loggedIn']['admin'];
+$canCopy = $_SESSION['loggedIn']['admin'];
 ?>
 
 <input type="hidden" id="page" value="<?= $page ?>">
@@ -87,43 +88,54 @@ $canAdd = $page !== 'root' && !$parent && $_SESSION['loggedIn']['admin'];
                 </a>
             </li>
         </ul>
-        <ul>
-            <?php if ($canAdd): ?>
+        <div class="page-buttons">
+            <h3>Page : </h3>
+            <ul>
+                <?php if ($canAdd): ?>
+                    <li class="button-tab">
+                        <a href="#" class="button-link"
+                            onclick="updateURL('?page=addPage&parent=<?= $page ?>'); return false;">
+                            <?= _('Add') ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
+                <?php if ($canCopy): ?>
+                    <li class="button-tab">
+                        <a href="#" class="button-link" onclick="copyPage('<?= $contentFolder ?>')">
+                            <?= _('Copy') ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
+                <?php if ($canDelete): ?>
+                    <li class="button-tab">
+                        <a href="#" class="button-link" onclick="deletePage('<?= $contentFolder ?>')">
+                            <?= _('Delete') ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
                 <li class="button-tab">
-                    <a href="#" class="button-link" onclick="updateURL('?page=addPage&parent=<?= $page ?>'); return false;">
-                        <?= _('Add page') ?>
-                    </a>
+                    <div class="button-link" id="preview">
+                        <?= _('Preview') ?>
+                    </div>
                 </li>
-            <?php endif; ?>
-            <?php if ($canDelete): ?>
                 <li class="button-tab">
-                    <a href="#" class="button-link" onclick="deletePage('<?= $contentFolder ?>')">
-                        <?= _('Delete page') ?>
-                    </a>
+                    <div class="button-link" id="publish">
+                        <?= _('Publish') ?>
+                    </div>
                 </li>
-            <?php endif; ?>
-            <li class="button-tab">
-                <div class="button-link" id="preview">
-                    <?= _('Preview') ?>
-                </div>
-            </li>
-            <li class="button-tab">
-                <div class="button-link" id="publish">
-                    <?= _('Publish') ?>
-                </div>
-            </li>
-        </ul>
+            </ul>
+        </div>
     </div>
 </header>
 
 <div class="page-container">
-<?php
-if (!empty($_GET['edit'])) {
-    include 'modules/pageMeta.php';
-} else {
-    include 'modules/pageContent.php';
-}
-?>
+    <?php
+    if (!empty($_GET['edit'])) {
+        include 'modules/pageMeta.php';
+    } else {
+        include 'modules/pageContent.php';
+    }
+    ?>
 </div>
 <script src="js/works-butt-head.js" type="module"></script>
 <script>
@@ -152,5 +164,9 @@ if (!empty($_GET['edit'])) {
         document.getElementById('modal-save').addEventListener('click', () => {
             confirmDelete(page);
         })
+    }
+    function copyPage(page) {
+        console.log('hello ', page)
+        confirmCopy(page);
     }
 </script>

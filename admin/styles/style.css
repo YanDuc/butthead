@@ -267,6 +267,7 @@ input[type="submit"]:hover {
 .permissions-button,
 .update-button,
 .keep-out-button,
+.copy-button,
 .delete-button {
   background-color: #ccc;
   padding: 5px 10px;
@@ -343,6 +344,7 @@ input[type="submit"]:hover {
 
 .actions {
     display: flex;
+    visibility: hidden;
 }
 
 /* Sidebar */
@@ -427,4 +429,11 @@ input[type="radio"] + label:after {
   content: ' ';
   display: block;
   margin-top: 2px; /* Adjust as needed */
+}
+.page-buttons {
+  display: flex;
+  align-items: baseline;
+}
+.page-buttons ul {
+  margin-left: 10px;
 }

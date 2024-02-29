@@ -9,6 +9,7 @@ const page = parent ? parent + "/" + currentPage : currentPage;
 const liBlocs = document.querySelectorAll("li.block");
 const liLayouts = document.querySelectorAll("li.layout");
 const pageContent = document.getElementById("page-content");
+const blockContent = document.querySelectorAll("section");
 
 const layoutBlocs = document.querySelectorAll(".layout-blocks");
 layoutBlocs.forEach((block) => {
@@ -28,6 +29,18 @@ layoutBlocs.forEach((block) => {
       location.reload();
     }
 
+  });
+});
+
+blockContent.forEach((section) => {
+  section.addEventListener("mouseenter", async (event) => {
+      const actions = event.currentTarget.querySelector(".actions");
+      actions.style.visibility = "visible";
+  });
+
+  section.addEventListener("mouseleave", async (event) => {
+      const actions = event.currentTarget.querySelector(".actions");
+      actions.style.visibility = "hidden";
   });
 });
 
@@ -163,6 +176,7 @@ document.addEventListener("click", async function (event) {
   if (
     event.target.classList.contains("update-button") ||
     event.target.classList.contains("delete-button") ||
+    event.target.classList.contains("copy-button") ||
     event.target.classList.contains("keep-out-button") ||
     event.target.classList.contains("chevron-up-icon") ||
     event.target.classList.contains("chevron-down-icon")
@@ -235,6 +249,9 @@ document.addEventListener("click", async function (event) {
             console.error("error:", error);
           }
         });
+    } else if (event.target.classList.contains("copy-button")) {
+      await getResponse("ContentManager", "copy", form);
+      location.reload();
     } else if (event.target.classList.contains("keep-out-button")) {
       // get data-layout-id from event
       const layoutID = event.target.getAttribute("data-layout-id");

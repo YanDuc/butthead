@@ -19,6 +19,18 @@ async function confirmDelete(page) {
 }
 window.confirmDelete = confirmDelete;
 
+async function confirmCopy(page) {
+  const copyForm = new FormData();
+  copyForm.append("pagePath", page);
+  try {
+    await getResponse("PageManager", "copyPage", copyForm);
+    location.reload();
+  } catch (error) {
+    console.error("error:", error);
+  }
+}
+window.confirmCopy = confirmCopy;
+
 publish.addEventListener("click", async (event) => {
   event.preventDefault();
   const form = new FormData();
