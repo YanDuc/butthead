@@ -35,11 +35,11 @@ class HTMLProcessor
 
             // get header            
             $headerArray = $this->getBlocks('bh-header');
-            $header = $headerArray[0];
+            $header = !empty($headerArray[0]) ? $headerArray[0] : [];
             $nav = $this->getNavigation($path);
             $header['html'] = preg_replace('/\{\{\s*nav\s*\}\}/', $nav, $header['html']);
             $footerArray = $this->getBlocks('bh-footer');
-            $footer = $footerArray[0];
+            $footer = !empty($footerArray[0]) ? $footerArray[0] : [];
 
             $blocksArray = array_merge([$header], $blocksArray, [$footer]);
 
@@ -47,7 +47,7 @@ class HTMLProcessor
             $blocksArray = &$this->processBlocks($blocksArray);
             $htmlString = '';
             foreach ($blocksArray as $block) {
-                $htmlString .= $block['html'];
+                $htmlString .= !empty($block['html']) ? $block['html'] : '';
             }
             $style = $this->extractBlocStyles($globalStyle . $htmlString);
             $head = $this->getHead($title, $description, $style);
@@ -297,7 +297,7 @@ class HTMLProcessor
 
                 $path = $root ? $root . '/' . $key : $key;
                 $nav .= '<li><a href="' . $path . '"' . $this->activeClass($path, $currentPage) . '>' . $page['pageName'] . '</a>';
-                if (isset($page['subPages'])) {
+                if (!empty($page['subPages'])) {
                     $nav .= '<ul class="bh-nav-second-level">';
                     $nav .= $this->buildNavigation($page['subPages'], $key, $currentPage);
                     $nav .= '</ul>';

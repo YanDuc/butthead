@@ -13,7 +13,7 @@ $pages = $pageManager->getPages();
   </a>
   <ul id="sortable">
     <?php foreach ($pages as $id => $data): ?>
-      <?php if (!isset($data['pageName'])) { continue; } ?>
+      <?php if (!isset($data['pageName']) || str_starts_with($id, 'bh-')) { continue; } ?>
       <?php $unauthorizedUsers = !empty($data['unauthorizedUsers']) ? $data['unauthorizedUsers'] : null; ?>
       <?php $allowChange = !empty($unauthorizedUsers) && in_array($_SESSION['loggedIn']['email'], $unauthorizedUsers) ? false : true ?>
       <div class="drop-zone-nav" id="<?= $id ?>"></div>
@@ -80,10 +80,11 @@ $pages = $pageManager->getPages();
 <script type="module">
   import { getResponse } from "./js/ajax_handler.js";
 
-  async function changeOrder(pagePath, belowPagePath) {
+  async function changeOrder(pagePath, belowPagePath, topPagePath) {
     const changeOrderForm = new FormData();
     changeOrderForm.append("pagePath", pagePath);
     changeOrderForm.append("belowPagePath", belowPagePath);
+    changeOrderForm.append("topPagePath", topPagePath);
     try {
       await getResponse("PageManager", "changeOrder", changeOrderForm);
       location.reload();
@@ -149,6 +150,8 @@ $pages = $pageManager->getPages();
       return;
     }
     const droppedOnId = e.target.id;
+    const previousSibblingId = e.target.previousElementSibling?.id
+    console.log('yan - previousSibblingId:', previousSibblingId)
     const isDraggedSubPage = draggedPath.includes('/')
     const isDroppedOnSubPage = droppedOnId.includes('/');
 
@@ -160,7 +163,7 @@ $pages = $pageManager->getPages();
 
         // Move dragged element to the new position
         try {
-          await changeOrder(draggedPath, droppedOnId);
+          await changeOrder(draggedPath, droppedOnId, previousSibblingId);
         } catch (err) {
           console.error('change order', err)
         }
@@ -173,7 +176,7 @@ $pages = $pageManager->getPages();
 
         // Move dragged element to the new position
         try {
-          await changeOrder(draggedPath, droppedOnId);
+          await changeOrder(draggedPath, droppedOnId, previousSibblingId);
         } catch (err) {
           console.error('change order', err)
         }

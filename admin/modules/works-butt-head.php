@@ -166,7 +166,6 @@ $canCopy = $_SESSION['loggedIn']['admin'];
         })
     }
     function copyPage(page) {
-        console.log('hello ', page)
         confirmCopy(page);
     }
 </script>

@@ -4,6 +4,8 @@ class PageManager
 {
     private $jsonFilePath = __DIR__ . '/../site.json';
     private $pages;
+    private $pageTarget;
+    private $secondPageTarget;
 
     public function __construct()
     {
@@ -104,90 +106,51 @@ class PageManager
         return $this->pages;
     }
 
-    public function changeOrder($pagePath, $belowPagePath)
+    public function changeOrder($pagePath, $belowPagePath, $topPagePath)
     {
-        $pages = $this->getPages();
+        if (!$belowPagePath && !$topPagePath) {
+            return;
+        }
+        $isBelow = $belowPagePath ? true : false;
+        $param = $isBelow ? $belowPagePath : $topPagePath;
 
-        // Check if both $pagePath and $belowPagePath contain '/'
-        if (strpos($pagePath, '/') !== false) {
-            // Extract parent pages and subpage names
-            list($parentPage1, $subpage1) = explode('/', $pagePath);
+        // array Destination
+        $key = $this->updatePageTargetAndGetKey($this->pages, $param);
+        $destinationArray = &$this->pageTarget;
 
-            // Check if $belowPagePath is empty
-            if (empty($belowPagePath)) {
-                // Handle ordering for subpages when $belowPagePath is empty
-                $this->reorderSubpages($pages, $parentPage1, $subpage1, null);
-            } else {
-                // Extract parent pages and subpage names from $belowPagePath
-                list($parentPage2, $subpage2) = explode('/', $belowPagePath);
+        // array Source
+        $keySource = $this->updatePageTargetAndGetKey($this->pages, $pagePath, true);
+        $sourceArray = &$this->secondPageTarget;
 
-                // Ensure that both subpages belong to the same parent
-                if ($parentPage1 == $parentPage2) {
-                    $this->reorderSubpages($pages, $parentPage1, $subpage1, $subpage2);
+        // not move if more than two levels
+        if (str_contains($param, '/') && !empty($sourceArray[$keySource]['subPages'])) {
+            return;
+        }
+
+        $previousOrder = !empty($destinationArray[$key]['order']) ? $destinationArray[$key]['order'] : 999;
+        $pageToMove = $sourceArray[$keySource];
+        if ($isBelow) {
+            $pageToMove['order'] = $previousOrder - 0.5;
+        } else {
+            $pageToMove['order'] = $previousOrder + 0.5;
+        }
+        unset($sourceArray[$keySource]);
+        $destinationArray[$keySource] = $pageToMove;
+        $this->sortPages($destinationArray);
+
+        // remove third level pages
+        foreach ($this->pages as &$page) {
+            if (!empty($page['subPages'])) {
+                foreach ($page['subPages'] as &$subPage) {
+                    if (!empty($subPage['subPages'])) {
+                        unset($subPage['subPages']);
+                    }
                 }
             }
-        } else if (strpos($pagePath, '/') == false && strpos($belowPagePath, '/') == false) {
-            // Handle ordering for top-level pages
-            $this->reorderTopLevelPages($pages, $pagePath, $belowPagePath);
         }
 
-        file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
+        file_put_contents($this->jsonFilePath, json_encode($this->pages, JSON_PRETTY_PRINT));
         return ['success' => true];
-    }
-
-    private function reorderTopLevelPages(&$pages, $pagePath, $belowPagePath)
-    {
-        $dragPage = $this->getPageParams($pagePath);
-        $belowDropPageOrder = 999;
-
-        if ($belowPagePath) {
-            $belowDropPage = $this->getPageParams($belowPagePath);
-            $belowDropPageOrder = $belowDropPage['order'];
-        }
-
-        foreach ($pages as &$page) {
-            if ($page['pageName'] === $dragPage['pageName']) {
-                $page['order'] = (int) $belowDropPageOrder - 0.5;
-            }
-        }
-
-        $this->sortPages($pages);
-    }
-
-    private function reorderSubpages(&$pages, $parentPage, $subpage1, $subpage2)
-    {
-        $parentPageData = &$pages[$parentPage];
-        $dragPage = $this->getPageParams($parentPage . '/' . $subpage1);
-        $belowDropPageOrder = 999;
-
-        if ($subpage2) {
-            $belowDropPage = $this->getPageParams($parentPage . '/' . $subpage2);
-            $belowDropPageOrder = $belowDropPage['order'];
-        }
-
-        foreach ($parentPageData['subPages'] as &$subpage) {
-            if ($subpage['pageName'] === $dragPage['pageName']) {
-                $subpage['order'] = (int) $belowDropPageOrder - 0.5;
-            }
-        }
-
-        // Sort the subpages based on their current order
-        uasort($parentPageData['subPages'], function ($a, $b) {
-            if ($a['order'] == $b['order']) {
-                return 0;
-            }
-            return ($a['order'] < $b['order']) ? -1 : 1;
-        });
-
-        // Assign new incremental order values starting from 1
-        $order = 1;
-        foreach ($parentPageData['subPages'] as &$subpage) {
-            $subpage['order'] = $order;
-            $order++;
-        }
-
-        // $this->sortSubpages($parentPageData['subPages']);
-        $this->sortPages($pages);
     }
 
     private function sortPages(&$pages)
@@ -208,92 +171,16 @@ class PageManager
         }
     }
 
-    private function sortSubpages(&$subpages)
-    {
-        // Sort the subpages based on their current order
-        uasort($subpages, function ($a, $b) {
-            if ($a['order'] == $b['order']) {
-                return 0;
-            }
-            return ($a['order'] < $b['order']) ? -1 : 1;
-        });
-
-        // Assign new incremental order values starting from 1
-        $order = 1;
-        foreach ($subpages as &$subpage) {
-            $subpage['order'] = $order;
-            $order++;
-        }
-    }
-
-    public function reorganizeOrder()
-    {
-        $pages = $this->getPages();
-
-        // Sort the pages based on their current order
-        usort($pages, function ($a, $b) {
-            return $a['order'] - $b['order'];
-        });
-
-        // Assign new incremental order values starting from 1
-        $order = 1;
-        foreach ($pages as &$page) {
-            $page['order'] = $order;
-            $order++;
-        }
-
-        file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
-        return ['success' => true];
-    }
-
-    public function sort()
-    {
-        $jsonData = [];
-        if (file_exists($this->jsonFilePath)) {
-            $jsonData = json_decode(file_get_contents($this->jsonFilePath), true);
-        }
-
-        // Find the maximum sort number
-        $maxSort = 0;
-        foreach ($jsonData as $page) {
-            if (isset($page['order']) && $page['order'] > $maxSort) {
-                $maxSort = $page['order'];
-            }
-        }
-
-        // Increment the sort number for the new item
-        $newSort = $maxSort + 1;
-
-        // Add the sort number to the new item
-        $newItem = end($jsonData);
-        $newItem['order'] = $newSort;
-        $jsonData[key($jsonData)] = $newItem;
-
-        file_put_contents($this->jsonFilePath, json_encode($jsonData, JSON_PRETTY_PRINT));
-    }
-
-    private function log($message)
-    {
-        // if message is not an array
-        if (!is_array($message)) {
-            error_log($message);
-        } else {
-            error_log(print_r($message, true));
-        }
-    }
-
     public function addUnauthorizedUsers($email, $pagePath)
     {
-        $pages = $this->getPages();
-        $updatedPages = $this->updatePageUnauthorizedUsers($pages, $email, $pagePath, true);
+        $updatedPages = $this->updatePageUnauthorizedUsers($this->pages, $email, $pagePath, true);
         file_put_contents($this->jsonFilePath, json_encode($updatedPages, JSON_PRETTY_PRINT));
         return ['success' => true];
     }
 
     public function removeUnauthorizedUsers($email, $pagePath)
     {
-        $pages = $this->getPages();
-        $updatedPages = $this->updatePageUnauthorizedUsers($pages, $email, $pagePath, false);
+        $updatedPages = $this->updatePageUnauthorizedUsers($this->pages, $email, $pagePath, false);
         file_put_contents($this->jsonFilePath, json_encode($updatedPages, JSON_PRETTY_PRINT));
         return ['success' => true];
     }
@@ -322,115 +209,66 @@ class PageManager
 
     public function getPageParams($pagePath)
     {
-        $parent = null;
-        if (str_contains($pagePath, '/')) {
-            $parent = explode('/', $pagePath)[0];
-        }
-        $pages = $this->getPages();
-        foreach ($pages as $key => $page) {
-            if (!$parent) {
-                if ($key == $pagePath) {
-                    $page['url'] = $key;
-                    return $page;
-                }
-            } else {
-                $subPageName = explode('/', $pagePath)[1];
-                if ($key == $parent && isset($page['subPages'][$subPageName])) {
-                    $page['subPages'][$subPageName]['url'] = $subPageName;
-                    return $page['subPages'][$subPageName];
-                }
-            }
+        $key = $this->updatePageTargetAndGetKey($this->pages, $pagePath);
+        if (isset($key) && isset($this->pageTarget[$key])) {
+            $params = $this->pageTarget[$key];
+            $params['url'] = $key;
+            return $params;
         }
         throw new Exception('Page not found');
     }
 
     public function editPage($url, $pageName, $description, $addToNav, $pagePath)
     {
-        $parent = null;
-        if (str_contains($pagePath, '/')) {
-            $parent = explode('/', $pagePath)[0];
+        $key = $this->updatePageTargetAndGetKey($this->pages, $pagePath);
+        $newKey = ($url == $key) ? $key : $url;
+        $this->pageTarget[$newKey] = $this->pageTarget[$key];
+        $this->pageTarget[$newKey]['pageName'] = $pageName;
+        $this->pageTarget[$newKey]['description'] = $description;
+        $this->pageTarget[$newKey]['addToNav'] = ($addToNav === 'true') ? true : false;
+        if ($url !== $key) {
+            unset($this->pageTarget[$key]);
         }
-        $pages = $this->getPages();
-        $change = false;
-        foreach ($pages as $key => &$page) {
-            if (!$parent && $key == $pagePath) {
-                $pages[$url] = $page;
-                $pages[$url]['description'] = $description;
-                $pages[$url]['pageName'] = $pageName;
-                $pages[$url]['addToNav'] = $addToNav === 'true' ? true : false;
-                if ($url != $key) {
-                    unset($pages[$key]);
-                }
-                $change = true;
-                break;
-            } else {
-                $subPageName = explode('/', $pagePath)[1];
-                if ($key == $parent && isset($page['subPages'][$subPageName])) {
-                    $pages[$parent]['subPages'][$url] = $page['subPages'][$subPageName];
-                    $pages[$parent]['subPages'][$url]['description'] = $description;
-                    $pages[$parent]['subPages'][$url]['pageName'] = $pageName;
-                    $pages[$parent]['subPages'][$url]['addToNav'] = $addToNav === 'true' ? true : false;
-                    if ($url != $subPageName) {
-                        unset($pages[$parent]['subPages'][$subPageName]);
-                    }
-                    $change = true;
-                    break;
-                }
+        file_put_contents($this->jsonFilePath, json_encode($this->pages, JSON_PRETTY_PRINT));
+    }
+
+    private function updatePageTargetAndGetKey(&$json, $page, $secondPageTarget = false)
+    {
+        $targetParam = $secondPageTarget ? 'secondPageTarget' : 'pageTarget';
+        $pathParts = explode('/', $page);
+        $key = $pathParts[0];
+        $this->{$targetParam} = &$json;
+
+        if (count($pathParts) > 1) {
+            foreach (array_slice($pathParts, 1) as $part) {
+                $this->{$targetParam} = &$this->{$targetParam}[$pathParts[0]]['subPages'];
+                $key = $part;
             }
         }
-        if ($change) {
-            file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
-        }
+        return $key;
     }
 
     public function removePage($pagePath)
     {
-        $parent = null;
-        if (str_contains($pagePath, '/')) {
-            $parent = explode('/', $pagePath)[0];
-        }
-        $pages = $this->getPages();
-        foreach ($pages as $key => &$page) {
-            if (!$parent && $key == $pagePath) {
-                unset($pages[$key]);
-                break;
-            } else {
-                $subPageName = explode('/', $pagePath)[1];
-                if ($key == $parent && isset($page['subPages'][$subPageName])) {
-                    unset($page['subPages'][$subPageName]);
-                    break;
-                }
-            }
-        }
-
-        file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
+        $key = $this->updatePageTargetAndGetKey($this->pages, $pagePath);
+        unset($this->pageTarget[$key]);
+        file_put_contents($this->jsonFilePath, json_encode($this->pages, JSON_PRETTY_PRINT));
         return ['success' => true];
     }
 
     public function copyPage($pagePath)
     {
-        $parent = null;
-        if (str_contains($pagePath, '/')) {
-            $parent = explode('/', $pagePath)[0];
-        }
-        $pages = $this->getPages();
-        foreach ($pages as $key => &$page) {
-            if (!$parent && $key == $pagePath) {
-                // add page-copy to pages
-                $newPageKey = $key . '-copy'; // New key for the copied page
-                $pages[$newPageKey] = $page; // Add the copied page to the $pages array with the new key
-                break;
-            } else {
-                $subPageName = explode('/', $pagePath)[1];
-                if ($key == $parent && isset($page['subPages'][$subPageName])) {
-                    $newPageKey = $subPageName . '-copy'; // New key for the copied page
-                    $page['subPages'][$newPageKey] = $page['subPages'][$subPageName];
-                    break;
-                }
+        $key = $this->updatePageTargetAndGetKey($this->pages, $pagePath);
+        $this->pageTarget[$key . '-copy'] = $this->pageTarget[$key];
+
+        $subpages = [];
+        if (isset($this->pageTarget[$key]['subPages'])) {
+            foreach ($this->pageTarget[$key]['subPages'] as $subkey => $value) {
+                $subpages[$subkey . '-copy'] = $value;
             }
         }
-
-        file_put_contents($this->jsonFilePath, json_encode($pages, JSON_PRETTY_PRINT));
+        $this->pageTarget[$key . '-copy']['subPages'] = $subpages;
+        file_put_contents($this->jsonFilePath, json_encode($this->pages, JSON_PRETTY_PRINT));
         return ['success' => true];
     }
 }

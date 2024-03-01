@@ -11,13 +11,15 @@ class ContentManager
     const IMAGES_PATH = __DIR__ . '/../../assets/img/';
     private $jsonFilePath = __DIR__ . '/../site.json';
     private $json;
+    private $jsonString;
     private $target;
     private $targetDestination; // using when moving block to another layout
 
 
     public function __construct()
     {
-        $this->json = json_decode(file_get_contents($this->jsonFilePath), true);
+        $this->jsonString = file_get_contents($this->jsonFilePath);
+        $this->json = json_decode($this->jsonString, true);
     }
 
     public function addContent($page, $block, ...$rest)
@@ -555,15 +557,18 @@ class ContentManager
 
     private function deleteImage($fileName)
     {
-        unlink(self::IMAGES_PATH . $fileName . '.jpeg');
-        unlink(self::IMAGES_PATH . $fileName . '_s.jpeg');
-        unlink(self::IMAGES_PATH . $fileName . '_m.jpeg');
+        // if filename appear two times, not delete
+        $occurences = substr_count($this->jsonString, $fileName);
+        if ($occurences === 1) {            
+            unlink(self::IMAGES_PATH . $fileName . '.jpeg');
+            unlink(self::IMAGES_PATH . $fileName . '_s.jpeg');
+            unlink(self::IMAGES_PATH . $fileName . '_m.jpeg');
+        }
     }
 
 
     private function writeContentToFile($page, $nameOfBloc, $blockContent, $postValues, $isBloc = true)
     {
-        Logger::log($postValues);
         try {
             $this->updateTarget($this->json, $page);
             $blockDatas = $this->createJson($nameOfBloc, $postValues, $isBloc);
