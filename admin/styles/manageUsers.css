@@ -9,6 +9,7 @@
     .user-table {
         width: 600px;
         border-collapse: collapse;
+        background-color: white;
     }
 
     .user-table th,
@@ -18,7 +19,7 @@
     }
 
     .user-table th {
-        background-color: #f2f2f2;
+        background-color: #bebebe;
         text-align: left;
     }
 
@@ -33,12 +34,12 @@
     /* Permissions tab */
     .permissions-tab {
         display: none;
-        margin-top: 20px;
+        margin: 20px;
         padding: 20px;
         border: 1px solid #ddd;
     }
 
-    .permissions-tab h2 {
+    .permissions-tab h3 {
         margin-bottom: 10px;
     }
 

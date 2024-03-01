@@ -11,7 +11,10 @@ $users = $UsersManager->getUsersArray();
         <button id="modal-save" class="modal-button"><?= _('Confirm') ?></button>
     </div>
 </div>
-<a class="button-link" href="?page=addUser"><?= _('Add user') ?></a>
+<header id="page-header">
+    <h1><?= _('Manage users') ?></h1>
+    <a class="button-link" href="?page=addUser"><?= _('Add user') ?></a>
+</header>
 <div class="tab-container">
     <table class="user-table">
         <thead>
@@ -46,8 +49,7 @@ $users = $UsersManager->getUsersArray();
 </div>
 <div id="error" class="tac"></div>
 
-<div class="permissions-tab" id="permissions-tab">
-    <h2><?= _('Permissions') ?></h2>
+<div class="permissions-tab page-container" id="permissions-tab">
     <div id="permissions-container">
         <!-- Permissions checkboxes will be dynamically added here -->
     </div>

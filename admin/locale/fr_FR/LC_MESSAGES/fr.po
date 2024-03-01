@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-02-29 15:38+0100\n"
-"PO-Revision-Date: 2024-02-29 15:39+0100\n"
+"POT-Creation-Date: 2024-03-01 15:24+0100\n"
+"PO-Revision-Date: 2024-03-01 15:24+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -37,19 +37,19 @@ msgstr "Édition"
 msgid "Build"
 msgstr "Générer le site"
 
-#: includes/header.php:19
+#: includes/header.php:21
 msgid "French"
 msgstr "Français"
 
-#: includes/header.php:23
+#: includes/header.php:25
 msgid "English"
 msgstr "Anglais"
 
-#: includes/header.php:28
+#: includes/header.php:30
 msgid "Change Password"
 msgstr "Changer le mot de passe"
 
-#: includes/header.php:31
+#: includes/header.php:33
 msgid "Disconnect"
 msgstr "Déconnexion"
 
@@ -57,7 +57,7 @@ msgstr "Déconnexion"
 msgid "Pages"
 msgstr "Pages"
 
-#: includes/sidebar.php:12 modules/works-butt-head.php:94
+#: includes/sidebar.php:12
 msgid "Add page"
 msgstr "Ajouter une page"
 
@@ -73,7 +73,7 @@ msgstr "Entête"
 msgid "Footer"
 msgstr "Bas de page"
 
-#: index.php:13
+#: index.php:12
 msgid "Admin Panel"
 msgstr "Administration"
 
@@ -133,11 +133,16 @@ msgstr "Ajouter un bloc"
 msgid "Get out of layout"
 msgstr "Sortir"
 
-#: modules/pageContent.php:65 modules/users/manageUsers.php:40
+#: modules/pageContent.php:65 modules/users/manageUsers.php:43
+#: modules/works-butt-head.php:112
 msgid "Delete"
 msgstr "Supprimer"
 
-#: modules/pageContent.php:66
+#: modules/pageContent.php:66 modules/works-butt-head.php:105
+msgid "Copy"
+msgstr ""
+
+#: modules/pageContent.php:67
 msgid "Update"
 msgstr "Modifier"
 
@@ -153,53 +158,59 @@ msgstr "Annuler"
 msgid "Confirm"
 msgstr "Confirmer"
 
-#: modules/users/manageUsers.php:14
+#: modules/users/manageUsers.php:15
+msgid "Manage users"
+msgstr "Gestion des utilisateurs"
+
+#: modules/users/manageUsers.php:16
 msgid "Add user"
 msgstr "Ajouter un utilisateur"
 
-#: modules/users/manageUsers.php:19
+#: modules/users/manageUsers.php:22
 msgid "Email"
 msgstr "Email"
 
-#: modules/users/manageUsers.php:20
+#: modules/users/manageUsers.php:23
 msgid "Role"
 msgstr "Role"
 
-#: modules/users/manageUsers.php:21
+#: modules/users/manageUsers.php:24
 msgid "Actions"
 msgstr "Actions"
 
-#: modules/users/manageUsers.php:34
+#: modules/users/manageUsers.php:37
 msgid "Admin"
 msgstr "Admin"
 
-#: modules/users/manageUsers.php:39
+#: modules/users/manageUsers.php:42
 msgid "Permission"
 msgstr "Permissions"
 
-#: modules/users/manageUsers.php:50
-msgid "Permissions"
-msgstr "Permissions"
-
-#: modules/works-butt-head.php:80
+#: modules/works-butt-head.php:81
 msgid "Content"
 msgstr "Contenu"
 
-#: modules/works-butt-head.php:86
+#: modules/works-butt-head.php:87
 msgid "SEO"
 msgstr "SEO"
 
-#: modules/works-butt-head.php:101
-msgid "Delete page"
-msgstr "Supprimer une page"
+#: modules/works-butt-head.php:98
+msgid "Add"
+msgstr "Ajouter"
 
-#: modules/works-butt-head.php:107
+#: modules/works-butt-head.php:118
 msgid "Preview"
 msgstr "Prévisualiser"
 
-#: modules/works-butt-head.php:112
+#: modules/works-butt-head.php:123
 msgid "Publish"
 msgstr "Publier"
+
+#~ msgid "Permissions"
+#~ msgstr "Permissions"
+
+#~ msgid "Delete page"
+#~ msgstr "Supprimer une page"
 
 #~ msgid "Page Name"
 #~ msgstr "Nom de la page"

@@ -1,9 +1,8 @@
 <?php
-    if(!isset($_SESSION)) 
-    { 
-        session_start(); 
-    } 
-    include_once 'includes/locale_setup.php';
+if (!isset($_SESSION)) {
+  session_start();
+}
+include_once 'includes/locale_setup.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,51 +31,53 @@
     include 'modules/connexion.php';
     echo '</div>';
   } else {
-    $isAdmin = $_SESSION['loggedIn']['admin'];
-    include 'includes/header.php'; ?>
+    $isAdmin = $_SESSION['loggedIn']['admin']; ?>
     <div class="main-container">
       <?php include 'includes/sidebar.php'; ?>
-      <main>
-        <?php
-        $page = !empty($_GET['page']) ? $_GET['page'] : '';
-        $parent = !empty($_GET['parent']) ? $_GET['parent'] : null;
-        switch ($page) {
-          case 'parameters':
-            if ($isAdmin) {
-              include 'modules/users/manageUsers.php';
-            } else {
+      <div style="width: 100%;">
+        <?php include 'includes/header.php'; ?>
+        <main>
+          <?php
+          $page = !empty($_GET['page']) ? $_GET['page'] : '';
+          $parent = !empty($_GET['parent']) ? $_GET['parent'] : null;
+          switch ($page) {
+            case 'parameters':
+              if ($isAdmin) {
+                include 'modules/users/manageUsers.php';
+              } else {
+                include 'modules/404.php';
+              }
+              break;
+            case 'addUser':
+              if ($isAdmin) {
+                include 'modules/users/addUser.php';
+              } else {
+                include 'modules/404.php';
+              }
+              break;
+            case 'addPage':
+              include 'modules/addPage.php';
+              break;
+            case 'changePassword':
+              include 'modules/changePassword.php';
+              break;
+            case '404':
               include 'modules/404.php';
-            }
-            break;
-          case 'addUser':
-            if ($isAdmin) {
-              include 'modules/users/addUser.php';
-            } else {
-              include 'modules/404.php';
-            }
-            break;
-          case 'addPage':
-            include 'modules/addPage.php';
-            break;
-          case 'changePassword':
-            include 'modules/changePassword.php';
-            break;
-          case '404':
-            include 'modules/404.php';
-            break;
-          case 'header':
-            include 'modules/header.php';
-            break;
-          case 'footer':
-            include 'modules/footer.php';
-            break;
-          default:
-            include 'modules/works-butt-head.php';
-            break;
-        }
+              break;
+            case 'header':
+              include 'modules/header.php';
+              break;
+            case 'footer':
+              include 'modules/footer.php';
+              break;
+            default:
+              include 'modules/works-butt-head.php';
+              break;
+          }
   }
   ?>
-    </main>
+      </main>
+    </div>
   </div>
 </body>
 

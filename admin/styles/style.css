@@ -74,7 +74,6 @@ aside ul li {
 /* Main content styles */
 main {
   padding: 20px 0;
-  width: calc(100% - 250px);
 }
 
 .disabled {

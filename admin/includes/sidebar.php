@@ -151,7 +151,6 @@ $pages = $pageManager->getPages();
     }
     const droppedOnId = e.target.id;
     const previousSibblingId = e.target.previousElementSibling?.id
-    console.log('yan - previousSibblingId:', previousSibblingId)
     const isDraggedSubPage = draggedPath.includes('/')
     const isDroppedOnSubPage = droppedOnId.includes('/');
 

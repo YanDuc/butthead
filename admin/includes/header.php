@@ -2,14 +2,16 @@
   <ul class="manage-menu">
     <?php if ($_SESSION['loggedIn']['admin']): ?>
       <li>
-      <a href="?page=parameters">
-        <img class="icon" src="assets/icons/dashicons--admin-generic.svg" width="30" height="30"
-          alt="<?= _('Edit parameters') ?>" />
-      </a>
-    </li>
+        <a href="?page=parameters">
+          <img class="icon" src="assets/icons/dashicons--admin-generic.svg" width="30" height="30"
+            alt="<?= _('Edit parameters') ?>" />
+        </a>
+      </li>
+      <li id="build">
+        <?= _('Build') ?>
+      </li>
     <?php endif; ?>
-    <li id="build"><?= _('Build') ?></li>
-    </ul>
+  </ul>
   <nav>
     <ul>
       <li>
