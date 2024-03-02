@@ -63,14 +63,23 @@ This project is currently in a usable state; however, there are a few bugs that 
 
 ## Getting Started
 
-1. Clone the repository to your local machine.
-2. Ensure PHP 7 or later is installed.
-3. Open your terminal and navigate to the project directory.
-4. Run the application by accessing the "butthead/admin" URL in your browser.
+## Getting Started
+
+1. Clone the repository to your local machine and move the contents of the "butthead" folder to the root of your web server. If you prefer, you can also manually update the `.htaccess` file. 
+   
+2. Ensure PHP 7 or a later version is installed on your server.
+
+3. Run the application by accessing the "www.my-project.com/admin" URL in your web browser.
+
+4. If you encounter issues (try again), or in your `php.ini`, uncomment the gettext and GD library. If you are unsure, consult your preferred AI or visit Stack Overflow for assistance.
+
 5. Log in with the default credentials:
    - Default email: admin@admin.fr
    - Default password: admin
+
 6. Once logged in, consider creating a new user account. This will replace the default credentials.
+
+Now you should be ready to explore and utilize Butthead CMS for your content management needs!
 
 ## Butthead Documentation
 
