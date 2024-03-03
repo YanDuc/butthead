@@ -10,7 +10,15 @@
     - [Overview](#overview)
     - [Known Bugs](#known-bugs)
 4. [Getting Started](#getting-started)
-5. [Documentation](#butthead-documentation)
+5. [Front-end Development Documentation](#front-end-development-documentation)
+    - [Blocks](#blocks)
+        - [Images](#images)
+        - [Texts](#texts)
+        - [Links](#links)
+    - [Layouts](#layouts)
+    - [Fonts, Images, and Non-dynamic Icons](#fonts-images-and-non-dynamic-icons)
+    - [Styles](#styles)
+6. [Documentation](#content-management-documentation)
     - [Roles](#roles)
         - [Admin Role](#admin-role)
         - [Non-Admin/User Role](#non-adminuser-role)
@@ -20,9 +28,9 @@
         - [SEO](#seo)
     - [Top Right Buttons on the Page](#top-right-buttons-on-the-page)
     - [Organizing Pages for Navigation](#organizing-pages-for-navigation)
-6. [Contributions](#contributions)
-7. [License](#license)
-8. [Acknowledgments](#acknowledgments)
+7. [Contributions](#contributions)
+8. [License](#license)
+9. [Acknowledgments](#acknowledgments)
 
 ## Introduction
 This is a Content Management System (CMS) designed to facilitate a clear separation between front-end development and content management. The goal is to provide a simple and lightweight solution that allows developers to focus on HTML and CSS while enabling webmasters to manage content efficiently.
@@ -63,8 +71,6 @@ This project is currently in a usable state; however, there are a few bugs that 
 
 ## Getting Started
 
-## Getting Started
-
 1. Clone the repository to your local machine and move the contents of the "butthead" folder to the root of your web server. If you prefer, you can also manually update the `.htaccess` file. 
    
 2. Ensure PHP 7 or a later version is installed on your server.
@@ -81,7 +87,117 @@ This project is currently in a usable state; however, there are a few bugs that 
 
 Now you should be ready to explore and utilize Butthead CMS for your content management needs!
 
-## Butthead Documentation
+## Front-end Development Documentation
+
+For templating, everything or almost everything happens in the `templates` folder. Each block consists of pure HTML and CSS. Dynamic content (images, texts, etc.) should be placed between `{{ }}`.
+
+The filename in the `blocks` directory corresponds to the block name in the administration area. For example, if I name my file `blocks/image_to_the_right.html`, the block name will be `image_to_the_right` in the administration area.
+
+### Blocks
+
+#### Images
+
+Input to create an image cropped to 500x500:
+
+```html
+<div>{{ img | 500 | 500 }}</div>
+```
+
+Input to create a resized image with a width of 500px:
+
+```html
+<div>{{ img | 500 }}</div>
+```
+
+Input to create a resized image with a height of 500px:
+
+```html
+<div>{{ img | 0 | 500 }}</div>
+```
+
+Input to create a resized image with the maximum height or width of 500px:
+
+```html
+<div>{{ img | resize | 500 | 500 }}</div>
+```
+
+#### Texts
+
+Input to create text with a minimum length of 20:
+
+```html
+<div>{{ input | 20 }}</div>
+```
+
+Input to create text with a length between 20 and 100:
+
+```html
+<div>{{ input | 20 | 100 }}</div>
+```
+
+Similarly, for multiline text:
+
+```html
+<div>{{ textarea | 20 | 100 }}</div>
+```
+
+#### Links
+
+This will create two form elements, a select with the list of links, and an input for the link name:
+
+```html
+{{ link }}
+```
+
+### Layouts
+
+Works similarly to blocks but should not contain dynamic elements (images, texts, etc.), only the `{{ content }}` tag. This tag will be replaced by all the blocks it contains.
+
+### Fonts, Images, and Non-dynamic Icons
+
+Everything happens in the `/assets` folder. In a block or layout, you can display these files via the URL `/assets/icons/filename`. The `assets` folder is not built; it is used directly in the project.
+
+For fonts, place them in the `/assets/fonts` folder and use them directly in CSS with the same filename. For example:
+
+```css
+font-family: Poppins-Regular;
+```
+
+No need for the `@font-face` property; it will be generated directly during the build on the administration side.
+
+### Styles
+
+Each block/layout encapsulates its own style. For example:
+
+`templates/blocks/red_paragraph.css`
+
+```html
+<p>{{ input | 20 | 100 }}</p>
+<style>
+    p {
+        color: red;
+    }
+</style>
+```
+
+`templates/blocks/green_paragraph.css`
+
+```html
+<p>{{ input | 20 | 100 }}</p>
+<style>
+    p {
+        color: green;
+    }
+</style>
+```
+
+This will display the blocks in the corresponding color.
+
+There might be a bug if an element contains multiple classes in the CSS and/or in the HTML.
+
+For global styles, use the `templates/styles` folder. The alphabetical order will be the compilation order.
+
+## Content Management Documentation
 
 ### Roles
 
