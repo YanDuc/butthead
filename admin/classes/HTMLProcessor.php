@@ -407,7 +407,12 @@ class HTMLProcessor
         $updatedStyles = preg_replace_callback('/([^{}]+)\{/', function ($matches) use ($className) {
             $selector = trim($matches[1]);
             if (!str_contains($selector, '@media')) {
-                return $selector . '.' . $className . ' {';
+                if (str_contains($selector, ':')) {
+                    $selectorParts = explode(':', $selector, 2);
+                    return $selectorParts[0] . '.' . $className . ':' . $selectorParts[1] . ' {';
+                } else {
+                    return $selector . '.' . $className . ' {';
+                }
             } else {
                 return $selector . ' {';
             }
